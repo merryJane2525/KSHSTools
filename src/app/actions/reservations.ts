@@ -105,17 +105,30 @@ export async function createReservationAction(_: unknown, formData: FormData) {
             endAt: { gt: startAt },
           };
 
+          // 한 기자재는 동시에 한 사용자만 사용 가능 (동일 기자재 시간 겹침 불가)
           const equipmentOverlap = await tx.reservation.findFirst({
             where: { equipmentId: equipment.id, ...overlapWhere },
             select: { id: true },
           });
           if (equipmentOverlap) return { ok: false as const, error: "EQUIPMENT_CONFLICT" as const };
 
-          const userOverlap = await tx.reservation.findFirst({
-            where: { userId: me.id, ...overlapWhere },
-            select: { id: true },
-          });
-          if (userOverlap) return { ok: false as const, error: "USER_CONFLICT" as const };
+          // 오퍼레이터 지정 시: 해당 오퍼레이터가 동일 시간대에 다른 예약(요청/승인)이 있으면 불가
+          if (operatorId) {
+            const operatorOverlapWhere = {
+              operatorId,
+              cancelledAt: null,
+              operatorStatus: { in: ["REQUESTED", "APPROVED"] as const },
+              startAt: { lt: endAt },
+              endAt: { gt: startAt },
+            };
+            const operatorOverlap = await tx.reservation.findFirst({
+              where: operatorOverlapWhere,
+              select: { id: true },
+            });
+            if (operatorOverlap) return { ok: false as const, error: "OPERATOR_CONFLICT" as const };
+          }
+
+          // 한 사용자는 여러 기자재를 동시에 예약 가능 (사용자별 겹침 검사 없음)
 
           const reservation = await tx.reservation.create({
             data: {
@@ -310,13 +323,14 @@ export async function approveReservationAction(_: unknown, formData: FormData) {
   });
   if (equipmentConflict) return { ok: false as const, error: "EQUIPMENT_CONFLICT" as const };
 
+  // 오퍼레이터는 동일 시간대에 다른 예약(요청 중이거나 승인된)이 있으면 중복 불가
   const operatorConflictReservation = await prisma.reservation.findFirst({
     where: {
       operatorId,
       id: { not: reservation.id },
       cancelledAt: null,
-      operatorStatus: "APPROVED",
-      status: "APPROVED",
+      operatorStatus: { in: ["REQUESTED", "APPROVED"] },
+      status: { in: ["PENDING", "APPROVED"] },
       startAt: { lt: overlapEnd },
       endAt: { gt: overlapStart },
     },

@@ -58,6 +58,7 @@ export function SearchBar({ expandable = false }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const ignoreBlurUntilRef = useRef<number>(0);
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -136,18 +137,28 @@ export function SearchBar({ expandable = false }: SearchBarProps) {
     }
   };
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
+    if (ignoreBlurUntilRef.current > Date.now()) return;
     setTimeout(() => {
       setOpen(false);
       if (expandable) setExpanded(false);
     }, 180);
-  };
+  }, [expandable]);
 
-  const handleIconClick = () => {
+  const handleIconClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (expanded) {
+      inputRef.current?.focus();
+      return;
+    }
     setExpanded(true);
     setOpen(true);
-    setTimeout(() => inputRef.current?.focus(), 100);
-  };
+    ignoreBlurUntilRef.current = Date.now() + 250;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => inputRef.current?.focus());
+    });
+  }, [expanded]);
 
   if (expandable) {
     return (

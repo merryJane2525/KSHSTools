@@ -11,7 +11,25 @@ function toDate(date: Date | string): Date {
 }
 
 export function formatDateTime(date: Date | string): string {
-  return toDate(date).toLocaleString(LOCALE, { timeZone: TIMEZONE });
+  return toDate(date).toLocaleString(LOCALE, {
+    timeZone: TIMEZONE,
+    hour12: true,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+/** 시간만 오전/오후 구분하여 표시 (예: 오전 9:00, 오후 12:30) */
+export function formatTime12h(date: Date | string): string {
+  return toDate(date).toLocaleString(LOCALE, {
+    timeZone: TIMEZONE,
+    hour12: true,
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export function formatDate(date: Date | string): string {

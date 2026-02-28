@@ -25,10 +25,26 @@ type ApprovedItem = {
   user: { username: string };
 };
 
-export default async function OperatorReservationsPage() {
+const OPERATOR_ERROR_MESSAGES: Record<string, string> = {
+  OPERATOR_CONFLICT: "해당 시간대에 이미 다른 예약이 있어 승인할 수 없습니다.",
+  EQUIPMENT_CONFLICT: "해당 시간대에 이미 다른 예약이 있습니다.",
+  FORBIDDEN: "권한이 없습니다.",
+  NOT_FOUND: "예약을 찾을 수 없습니다.",
+  ALREADY_CANCELLED: "이미 취소된 예약입니다.",
+  VALIDATION_ERROR: "입력값을 확인해 주세요.",
+};
+
+export default async function OperatorReservationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; highlight?: string }> | { error?: string; highlight?: string };
+}) {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (me.role !== "OPERATOR" && me.role !== "ADMIN") redirect("/");
+
+  const resolved = await Promise.resolve(searchParams);
+  const errorCode = typeof resolved.error === "string" ? resolved.error : undefined;
 
   const now = new Date();
 
@@ -91,6 +107,12 @@ export default async function OperatorReservationsPage() {
           </div>
         </div>
       </AnimateOnScroll>
+
+      {errorCode ? (
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+          {OPERATOR_ERROR_MESSAGES[errorCode] ?? "처리 중 오류가 발생했습니다."}
+        </div>
+      ) : null}
 
       <AnimateOnScroll>
         <section className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 shadow-sm">

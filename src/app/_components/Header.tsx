@@ -10,8 +10,8 @@ export async function Header() {
 
   return (
     <header className="relative z-50 border-b border-primary/10 bg-white/90 dark:bg-[#15191d]/90 dark:border-primary/20 backdrop-blur-sm">
-      <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:max-w-6xl sm:px-6 lg:max-w-7xl lg:flex-nowrap lg:gap-x-6 lg:px-8">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 lg:flex-nowrap lg:gap-3">
+      <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:max-w-6xl sm:px-6 lg:max-w-7xl lg:flex-nowrap lg:gap-x-6 lg:gap-y-0 lg:overflow-hidden lg:px-8">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 lg:flex-nowrap lg:overflow-hidden lg:gap-3 lg:gap-y-0">
           <Link href="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-bold tracking-tight text-primary hover:opacity-90 transition-opacity">
             <Image
               src="/favicon.ico"
@@ -22,7 +22,7 @@ export async function Header() {
             />
             <span>KSHS 심화기자재</span>
           </Link>
-          <nav className="flex min-w-0 flex-wrap items-center gap-x-0 gap-y-1 sm:gap-x-1 lg:flex-1 lg:gap-1">
+          <nav className="flex min-w-0 flex-1 items-center gap-x-0 gap-y-1 sm:gap-x-1 lg:gap-1 lg:flex-nowrap lg:overflow-x-auto lg:overflow-y-hidden lg:shrink lg:[scrollbar-width:none] lg:[-ms-overflow-style:none] lg:[&::-webkit-scrollbar]:hidden">
             <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/community">
               커뮤니티
             </Link>
@@ -61,12 +61,12 @@ export async function Header() {
               </Link>
             )}
           </nav>
-          <div className="hidden shrink-0 lg:block">
+          <div className="hidden shrink-0 lg:block ml-1">
             <SearchBar expandable />
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 text-sm">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 lg:flex-nowrap text-sm">
           <ThemeToggle />
           {user ? (
             <>

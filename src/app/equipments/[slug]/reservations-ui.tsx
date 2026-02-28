@@ -106,6 +106,7 @@ export function ReservationsPanel({
             {reservationError === "INVALID_EQUIPMENT" && "기자재가 올바르지 않습니다."}
             {reservationError === "EQUIPMENT_CONFLICT" && "해당 시간대에 이미 다른 예약이 있습니다."}
             {reservationError === "USER_CONFLICT" && "같은 시간대에 내 다른 예약이 이미 있습니다."}
+            {reservationError === "OPERATOR_CONFLICT" && "지정한 오퍼레이터가 해당 시간대에 이미 다른 예약이 있습니다."}
           </div>
         ) : null}
 

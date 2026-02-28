@@ -6,7 +6,15 @@ const HOUR_START = 6;
 const HOUR_END = 22;
 const HOURS = HOUR_END - HOUR_START;
 const PX_PER_HOUR = 28;
+const NOON_HOUR = 12;
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
+
+/** 시간(0~23)을 오전/오후 라벨로 (예: 9 → "오전 9:00", 14 → "오후 2:00") */
+function hourToLabel(h: number): string {
+  if (h < 12) return `오전 ${h}:00`;
+  if (h === 12) return "오후 12:00";
+  return `오후 ${h - 12}:00`;
+}
 
 type WeekLogItem = {
   id: string;
@@ -69,10 +77,10 @@ export function WeekTimetable({ weekStart, weekLogs, statusLabel }: WeekTimetabl
             {timeLabels.map((h) => (
               <div
                 key={h}
-                className="pl-2 border-b border-zinc-100 dark:border-zinc-700/80 flex items-start pt-0.5"
+                className={`pl-2 border-b border-zinc-100 dark:border-zinc-700/80 flex items-start pt-0.5 ${h === NOON_HOUR ? "border-t-2 border-t-zinc-300 dark:border-t-zinc-600 font-medium text-zinc-700 dark:text-zinc-300" : ""}`}
                 style={{ height: PX_PER_HOUR }}
               >
-                {h.toString().padStart(2, "0")}:00
+                {hourToLabel(h)}
               </div>
             ))}
           </div>
@@ -99,6 +107,11 @@ export function WeekTimetable({ weekStart, weekLogs, statusLabel }: WeekTimetabl
                     className="relative flex-1 min-h-0"
                     style={{ height: columnHeight }}
                   >
+                    <div
+                      className="absolute left-0 right-0 border-t-2 border-zinc-300 dark:border-zinc-600 pointer-events-none z-10"
+                      style={{ top: (NOON_HOUR - HOUR_START) * PX_PER_HOUR }}
+                      aria-hidden
+                    />
                     {dayBlocks.map(({ topPx, heightPx, log }) => (
                       <Link
                         key={log.id}
@@ -132,7 +145,7 @@ export function WeekTimetable({ weekStart, weekLogs, statusLabel }: WeekTimetabl
         </div>
       </div>
       <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-        블록을 클릭하면 해당 장비 예약 페이지로 이동합니다. 표시 구간: {HOUR_START}:00 ~ {HOUR_END}:00
+        블록을 클릭하면 해당 장비 예약 페이지로 이동합니다. 표시 구간: {hourToLabel(HOUR_START)} ~ 오후 {HOUR_END - 12}:00
       </p>
     </div>
   );
