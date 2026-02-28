@@ -66,12 +66,14 @@ export default async function Home() {
         {/* 제목 + About 버튼 — 영상 중앙에 배치 */}
         <div className="relative z-10 h-full flex flex-col justify-center items-center px-6">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-md home-animate-fade-in-up">
+            <h1 className="whitespace-nowrap text-4xl font-bold tracking-tight text-white drop-shadow-md home-animate-fade-in-up md:text-5xl">
               KSHS 심화기자재
             </h1>
-            <p className="text-lg text-white/90 max-w-2xl mx-auto home-animate-fade-in-up home-delay-1 drop-shadow-sm">
-              심화 기자재의 체계적인 사용 정보와 실험 경험을 공유하는 플랫폼
-            </p>
+            <div className="overflow-x-auto overflow-y-hidden px-2">
+              <p className="mx-auto inline-block max-w-2xl whitespace-nowrap text-lg text-white/90 drop-shadow-sm home-animate-fade-in-up home-delay-1">
+                심화 기자재의 체계적인 사용 정보와 실험 경험을 공유하는 플랫폼
+              </p>
+            </div>
             <div className="home-animate-fade-in-up home-delay-2">
               <Link
                 href="/about"

@@ -5,6 +5,23 @@ import { getCurrentUser } from "@/lib/auth";
 import { processManualContent } from "@/lib/markdown";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 
+/** DB에 없어도 URL로 접근 가능한 알려진 slug → 표시 이름 (404 방지) */
+const KNOWN_MANUAL_SLUGS: Record<string, string> = {
+  "freeze-dryer": "동결건조기",
+  "동결건조기": "동결건조기",
+  sem: "SEM",
+  "ft-ir": "FT-IR",
+};
+
+type EquipmentData = {
+  id: string;
+  name: string;
+  slug: string;
+  manual: string | null;
+  manualImages: unknown;
+  isActive: boolean;
+};
+
 export default async function EquipmentManualPage({
   params,
 }: {
@@ -20,14 +37,13 @@ export default async function EquipmentManualPage({
     notFound();
   }
 
-  // slug 별칭: 동일 기자재가 다른 slug로 등록된 경우 대비 (예: freeze-dryer ↔ 동결건조기)
   const slugAliases: Record<string, string[]> = {
     "freeze-dryer": ["동결건조기"],
     "동결건조기": ["freeze-dryer"],
   };
   const slugsToTry = [slug, ...(slugAliases[slug] ?? [])];
 
-  let equipment = await prisma.equipment.findFirst({
+  let equipment: EquipmentData | null = await prisma.equipment.findFirst({
     where: {
       slug: { in: slugsToTry },
       isActive: true,
@@ -41,6 +57,18 @@ export default async function EquipmentManualPage({
       isActive: true,
     },
   });
+
+  // DB에 없지만 알려진 slug면 플레이스홀더로 페이지 표시 (404 대신)
+  if (!equipment && KNOWN_MANUAL_SLUGS[slug]) {
+    equipment = {
+      id: "",
+      name: KNOWN_MANUAL_SLUGS[slug],
+      slug,
+      manual: null,
+      manualImages: null,
+      isActive: true,
+    };
+  }
 
   if (!equipment) {
     notFound();
@@ -56,14 +84,14 @@ export default async function EquipmentManualPage({
               기자재
             </Link>
             {" / "}
-            <Link className="hover:underline" href={`/equipments/${equipment.slug}`}>
+            <Link className="hover:underline" href={equipment.id ? `/equipments/${equipment.slug}` : "/equipments"}>
               {equipment.name}
             </Link>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{equipment.name} 사용 메뉴얼</h1>
           </div>
           <div className="flex gap-2">
-            {me.role === "ADMIN" && (
+            {me.role === "ADMIN" && equipment.id && (
               <Link
                 href={`/equipments/${equipment.slug}/manual/edit`}
                 className="rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
@@ -72,10 +100,10 @@ export default async function EquipmentManualPage({
               </Link>
             )}
             <Link
-              href={`/equipments/${equipment.slug}`}
+              href={equipment.id ? `/equipments/${equipment.slug}` : "/equipments"}
               className="rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
             >
-              기자재 정보로 돌아가기
+              {equipment.id ? "기자재 정보로 돌아가기" : "기자재 목록으로"}
             </Link>
           </div>
         </div>

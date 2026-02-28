@@ -9,9 +9,9 @@ export async function Header() {
 
   return (
     <header className="relative z-50 border-b border-primary/10 bg-white/90 dark:bg-[#15191d]/90 dark:border-primary/20 backdrop-blur-sm">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 text-sm font-bold tracking-tight text-primary hover:opacity-90 transition-opacity">
+      <div className="mx-auto flex w-full max-w-5xl flex-nowrap items-center justify-between gap-4 overflow-x-auto px-6 py-4">
+        <div className="flex min-w-0 flex-shrink-0 flex-nowrap items-center gap-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-bold tracking-tight text-primary hover:opacity-90 transition-opacity">
             <Image
               src="/favicon.ico"
               alt="KSHS 심화기자재"
@@ -21,45 +21,45 @@ export async function Header() {
             />
             <span>KSHS 심화기자재</span>
           </Link>
-          <nav className="flex items-center gap-1 text-sm">
-            <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/community">
+          <nav className="flex flex-nowrap items-center gap-1 text-sm">
+            <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/community">
               커뮤니티
             </Link>
-            <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/equipments">
+            <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/equipments">
               기자재
             </Link>
             {user && (
-              <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/reservations">
+              <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/reservations">
                 예약
               </Link>
             )}
-            <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/notifications">
+            <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/notifications">
               알림
             </Link>
             {user && (user.role === "OPERATOR" || user.role === "ADMIN") && (
-              <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/operator">
+              <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/operator">
                 오퍼레이터
               </Link>
             )}
             {user && user.role === "ADMIN" && (
               <>
-                <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/admin/users">
+                <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/admin/users">
                   사용자 관리
                 </Link>
-                <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/admin/posts">
+                <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/admin/posts">
                   게시글 관리
                 </Link>
               </>
             )}
             {user && (
-              <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/posts/new">
+              <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/posts/new">
                 게시글 작성
               </Link>
             )}
           </nav>
         </div>
 
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex shrink-0 flex-nowrap items-center gap-3 whitespace-nowrap text-sm">
           <ThemeToggle />
           {user ? (
             <>
