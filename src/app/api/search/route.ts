@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
     where: {
       ...typeWhere,
       OR: [
-        ...expanded.map((t) => ({ title: { contains: t, mode: "insensitive" as const } })),
-        ...expanded.map((t) => ({ content: { contains: t, mode: "insensitive" as const } })),
+        ...expanded.map((t: string) => ({ title: { contains: t, mode: "insensitive" as const } })),
+        ...expanded.map((t: string) => ({ content: { contains: t, mode: "insensitive" as const } })),
       ],
     },
     orderBy: { updatedAt: "desc" },
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       where: { id: { in: equipmentIds } },
       select: { id: true, name: true },
     });
-    equipments.forEach((e) => equipmentMap.set(e.id, e.name));
+    equipments.forEach((e: { id: string; name: string }) => equipmentMap.set(e.id, e.name));
   }
 
   const results = pageDocs.map((doc: ScoredDoc) => {

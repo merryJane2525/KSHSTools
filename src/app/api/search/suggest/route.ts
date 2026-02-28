@@ -29,10 +29,10 @@ export async function GET(request: NextRequest) {
   const all = await prisma.searchDocument.findMany({
     where: {
       OR: [
-        ...expanded.map((t) => ({
+        ...expanded.map((t: string) => ({
           title: { contains: t, mode: "insensitive" as const },
         })),
-        ...expanded.map((t) => ({
+        ...expanded.map((t: string) => ({
           content: { contains: t, mode: "insensitive" as const },
         })),
       ],
@@ -59,10 +59,16 @@ export async function GET(request: NextRequest) {
 
   scored.sort((a: ScoredDoc, b: ScoredDoc) => b.score - a.score);
 
-  const byType = { equipment: [] as typeof scored, manual: [] as typeof scored, qa: [] as typeof scored };
+  type DocTypeKey = "equipment" | "manual" | "qa";
+  const byType: Record<DocTypeKey, ScoredDoc[]> = {
+    equipment: [],
+    manual: [],
+    qa: [],
+  };
   for (const doc of scored) {
-    if (byType[doc.type].length < (doc.type === "equipment" ? LIMIT_EQUIPMENT : doc.type === "manual" ? LIMIT_MANUAL : LIMIT_QA))
-      byType[doc.type].push(doc);
+    const key: DocTypeKey = doc.type;
+    if (byType[key].length < (key === "equipment" ? LIMIT_EQUIPMENT : key === "manual" ? LIMIT_MANUAL : LIMIT_QA))
+      byType[key].push(doc);
   }
 
   const equipmentIds = [...new Set(scored.map((d: ScoredDoc) => d.equipmentId).filter(Boolean))] as string[];
@@ -72,7 +78,7 @@ export async function GET(request: NextRequest) {
       where: { id: { in: equipmentIds } },
       select: { id: true, name: true },
     });
-    equipments.forEach((e) => equipmentMap.set(e.id, e.name));
+    equipments.forEach((e: { id: string; name: string }) => equipmentMap.set(e.id, e.name));
   }
 
   const results: Array<{

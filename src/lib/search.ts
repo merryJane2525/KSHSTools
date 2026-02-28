@@ -39,7 +39,7 @@ export function expandWithSynonyms(tokens: string[]): string[] {
   const set = new Set<string>(tokens);
   for (const t of tokens) {
     const group = SYNONYMS[t] ?? SYNONYMS[t.toLowerCase()];
-    if (group) group.forEach((s) => set.add(s));
+    if (group) group.forEach((s: string) => set.add(s));
   }
   return Array.from(set);
 }
