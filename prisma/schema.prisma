@@ -35,6 +35,10 @@ enum NotificationType {
   MENTIONED
   COMMENTED
   SYSTEM
+  OPERATOR_REQUEST   // 오퍼레이터 지정 예약 요청
+  OPERATOR_APPROVED  // 오퍼레이터 승인
+  OPERATOR_REJECTED  // 오퍼레이터 거절
+  RESERVATION_CANCELED
 }
 
 enum ReportTargetType {
@@ -61,6 +65,21 @@ enum ReservationStatus {
   APPROVED  // 승인됨 (시간대 확정)
 }
 
+enum OperatorStatus {
+  NONE      // 오퍼레이터 없이 예약
+  REQUESTED // 오퍼레이터 승인 대기
+  APPROVED  // 오퍼레이터 승인 완료
+  REJECTED  // 오퍼레이터 거절
+  CANCELED  // 예약 취소 등으로 요청 종료
+}
+
+enum OperatorWorkLogStatus {
+  SCHEDULED  // 예정
+  COMPLETED  // 완료
+  CANCELED   // 취소
+  ADJUSTED   // 조정됨
+}
+
 enum SearchDocumentType {
   equipment
   manual
@@ -80,6 +99,7 @@ model User {
   posts           Post[]
   comments        Comment[]
   reservations    Reservation[]
+  operatorReservationRequests Reservation[] @relation("ReservationOperator")
 
   assignments          PostAssignment[] @relation("OperatorAssignments")
   createdAssignments   PostAssignment[] @relation("AssignmentCreator")
@@ -91,6 +111,9 @@ model User {
   notificationsActed   Notification[] @relation("NotificationActor")
 
   pushSubscriptions PushSubscription[]
+
+  operatorWorkLogs  OperatorWorkLog[] @relation("WorkLogOperator")
+  requesterWorkLogs OperatorWorkLog[]  @relation("WorkLogRequester")
 
   reportsFiled    Report[] @relation("ReportsFiled")
   auditLogs       AuditLog[] @relation("AuditActor")
@@ -123,6 +146,7 @@ model Equipment {
 
   posts     Post[]
   reservations Reservation[]
+  workLogs  OperatorWorkLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -142,8 +166,16 @@ model Reservation {
 
   cancelledAt DateTime?
 
+  operatorId         String?         // 지정된 오퍼레이터
+  operatorStatus     OperatorStatus  @default(NONE)
+  operatorResponseAt DateTime?
+  operatorNote       String?         // 승인/거절 코멘트(거절 사유)
+
   equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  operator    User?     @relation("ReservationOperator", fields: [operatorId], references: [id], onDelete: SetNull)
+
+  workLog     OperatorWorkLog?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -152,6 +184,7 @@ model Reservation {
   @@index([equipmentId, endAt])
   @@index([equipmentId, status])
   @@index([userId, startAt])
+  @@index([operatorId, operatorStatus])
 }
 
 model Post {
@@ -234,12 +267,13 @@ model Mention {
 }
 
 model Notification {
-  id        String           @id @default(uuid())
-  userId    String
-  type      NotificationType
-  actorId   String?
-  postId    String?
-  commentId String?
+  id            String           @id @default(uuid())
+  userId        String
+  type          NotificationType
+  actorId       String?
+  postId        String?
+  commentId     String?
+  reservationId String?
 
   title     String
   body      String
@@ -258,6 +292,30 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
   @@index([userId, createdAt])
+  @@index([reservationId])
+}
+
+model OperatorWorkLog {
+  id             String                @id @default(uuid())
+  reservationId  String                @unique
+  operatorId     String
+  equipmentId    String
+  userId         String                // 예약자
+  startAt        DateTime
+  endAt          DateTime
+  workedMinutes  Int                   // (end_at - start_at) 분
+  status         OperatorWorkLogStatus @default(SCHEDULED)
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  operator    User        @relation("WorkLogOperator", fields: [operatorId], references: [id], onDelete: Cascade)
+  equipment   Equipment   @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  user        User        @relation("WorkLogRequester", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([operatorId, startAt])
+  @@index([operatorId, status])
 }
 
 model Report {

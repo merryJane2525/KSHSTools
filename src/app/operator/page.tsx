@@ -95,12 +95,18 @@ export default async function OperatorInboxPage() {
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
               담당 배정된 게시글과 나를 멘션한 스레드를 한 곳에서 확인합니다.
             </p>
-            <div className="mt-2">
+            <div className="mt-2 flex gap-4">
               <Link
                 href="/operator/reservations"
                 className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
               >
                 예약 관리 →
+              </Link>
+              <Link
+                href="/operator/work"
+                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                근무 기록 →
               </Link>
             </div>
           </div>

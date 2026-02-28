@@ -32,6 +32,12 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  const indexCount = await prisma.searchDocument.count();
+  if (indexCount === 0) {
+    const { syncAllSearchDocuments } = await import("@/lib/search-index");
+    await syncAllSearchDocuments();
+  }
+
   const tokens = tokenizeQuery(q);
   const expanded = expandWithSynonyms(tokens);
   const problemBoost = isProblemQuery(tokens);

@@ -32,8 +32,13 @@ export default async function OperatorReservationsPage() {
 
   const now = new Date();
 
+  const pendingWhere =
+    me.role === "ADMIN"
+      ? { status: "PENDING" as const, cancelledAt: null, endAt: { gte: now }, operatorStatus: "REQUESTED" as const }
+      : { status: "PENDING" as const, cancelledAt: null, endAt: { gte: now }, operatorId: me.id, operatorStatus: "REQUESTED" as const };
+
   const pending: PendingItem[] = await prisma.reservation.findMany({
-    where: { status: "PENDING", cancelledAt: null, endAt: { gte: now } },
+    where: pendingWhere,
     orderBy: { startAt: "asc" },
     take: 100,
     select: {
@@ -47,8 +52,13 @@ export default async function OperatorReservationsPage() {
     },
   });
 
+  const approvedWhere =
+    me.role === "ADMIN"
+      ? { status: "APPROVED" as const, cancelledAt: null, endAt: { gte: now }, operatorStatus: "APPROVED" as const }
+      : { status: "APPROVED" as const, cancelledAt: null, endAt: { gte: now }, operatorId: me.id, operatorStatus: "APPROVED" as const };
+
   const approved: ApprovedItem[] = await prisma.reservation.findMany({
-    where: { status: "APPROVED", cancelledAt: null, endAt: { gte: now } },
+    where: approvedWhere,
     orderBy: { startAt: "asc" },
     take: 50,
     select: {
@@ -84,7 +94,7 @@ export default async function OperatorReservationsPage() {
 
       <AnimateOnScroll>
         <section className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 shadow-sm">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">승인 대기 ({pending.length})</h2>
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">나에게 요청된 예약 ({pending.length})</h2>
           {pending.length === 0 ? (
             <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">대기 중인 예약이 없습니다.</p>
           ) : (
@@ -115,8 +125,15 @@ export default async function OperatorReservationsPage() {
                         승인
                       </button>
                     </form>
-                    <form action={rejectReservationFormAction}>
+                    <form action={rejectReservationFormAction} className="flex items-center gap-2">
                       <input type="hidden" name="reservationId" value={r.id} />
+                      <input
+                        type="text"
+                        name="reason"
+                        placeholder="거절 사유 (선택)"
+                        maxLength={500}
+                        className="max-w-[140px] rounded-lg border border-zinc-200 dark:border-zinc-600 px-2 py-1 text-xs dark:bg-zinc-800 dark:text-zinc-200"
+                      />
                       <button
                         type="submit"
                         className="rounded-xl border border-zinc-200 dark:border-zinc-600 px-3 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"

@@ -48,6 +48,12 @@ export default async function NewReservationPage({ params, searchParams }: PageP
   });
   if (!equipment) notFound();
 
+  const operators = await prisma.user.findMany({
+    where: { status: "ACTIVE", role: { in: ["OPERATOR", "ADMIN"] } },
+    select: { id: true, username: true },
+    orderBy: { username: "asc" },
+  });
+
   const user = await prisma.user.findUnique({
     where: { id: me.id },
     select: { username: true, studentNumber: true },
@@ -74,6 +80,7 @@ export default async function NewReservationPage({ params, searchParams }: PageP
           defaultStudentName={defaultStudentName}
           defaultStudentNumber={defaultStudentNumber}
           defaultDate={defaultDate}
+          operators={operators}
         />
       </AnimateOnScroll>
     </div>

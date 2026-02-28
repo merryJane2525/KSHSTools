@@ -27,6 +27,8 @@ function SubmitButton() {
   );
 }
 
+type OperatorOption = { id: string; username: string };
+
 export function ReservationForm({
   equipmentId,
   equipmentSlug,
@@ -34,6 +36,7 @@ export function ReservationForm({
   defaultStudentName,
   defaultStudentNumber,
   defaultDate,
+  operators = [],
 }: {
   equipmentId: string;
   equipmentSlug: string;
@@ -41,6 +44,7 @@ export function ReservationForm({
   defaultStudentName: string;
   defaultStudentNumber: string;
   defaultDate: string;
+  operators?: OperatorOption[];
 }) {
   const { minDate, maxDate } = useMemo(() => {
     const d = new Date();
@@ -180,6 +184,26 @@ export function ReservationForm({
             </select>
           </label>
         </div>
+
+        {operators.length > 0 && (
+          <div className="mt-4 rounded-lg border border-primary/10 bg-primary/5 p-4 dark:border-primary/20 dark:bg-primary/10">
+            <span className="text-sm font-bold text-primary/80">오퍼레이터 지정 (선택)</span>
+            <p className="mt-1 text-xs text-primary/60">
+              오퍼레이터를 지정하면 해당 오퍼레이터가 승인한 후 예약이 확정됩니다.
+            </p>
+            <select
+              name="operatorId"
+              className="mt-2 w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-primary focus:ring-1 focus:ring-primary/20 dark:border-primary/20 dark:bg-primary/5"
+            >
+              <option value="">오퍼레이터 없이 예약</option>
+              {operators.map((op) => (
+                <option key={op.id} value={op.id}>
+                  @{op.username}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <p className="mt-2 text-xs text-primary/60">
           예약 시간은 10분 단위로 선택할 수 있으며, 현재 시각 기준 30일 이내만 예약 가능합니다. 예약 후 오퍼레이터 승인이 필요합니다.

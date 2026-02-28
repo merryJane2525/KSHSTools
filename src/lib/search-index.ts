@@ -3,7 +3,8 @@
 import { prisma } from "@/lib/db";
 import { stripHtml } from "./search";
 
-const MANUAL_CONTENT_MAX = 2000;
+/** 검색에 넣을 본문 최대 길이 (장비 설명·메뉴얼·Q&A 본문) */
+const MANUAL_CONTENT_MAX = 10_000;
 
 /** Equipment → SearchDocument (equipment + manual) */
 export async function syncEquipmentSearchDocuments() {
@@ -15,7 +16,9 @@ export async function syncEquipmentSearchDocuments() {
 
   for (const eq of equipments) {
     const title = eq.name;
-    const content = [eq.description ?? "", stripHtml(eq.manual ?? "")].join(" ").slice(0, MANUAL_CONTENT_MAX);
+    const desc = (eq.description ?? "").trim();
+    const manualPlain = stripHtml(eq.manual ?? "");
+    const content = [desc, manualPlain].filter(Boolean).join(" ").slice(0, MANUAL_CONTENT_MAX) || title;
     const url = `/equipments/${eq.slug}`;
 
     await prisma.searchDocument.upsert({
@@ -27,20 +30,20 @@ export async function syncEquipmentSearchDocuments() {
         sourceId: eq.id,
         equipmentId: eq.id,
         title,
-        content: content || title,
+        content,
         url,
         updatedAt: eq.updatedAt ?? now,
       },
       update: {
         title,
-        content: content || title,
+        content,
         url,
         updatedAt: eq.updatedAt ?? now,
       },
     });
 
     if (eq.manual && eq.manual.trim()) {
-      const manualContent = stripHtml(eq.manual).slice(0, MANUAL_CONTENT_MAX);
+      const manualContent = manualPlain.slice(0, MANUAL_CONTENT_MAX);
       await prisma.searchDocument.upsert({
         where: {
           type_sourceId: { type: "manual", sourceId: eq.id },
@@ -60,6 +63,8 @@ export async function syncEquipmentSearchDocuments() {
           updatedAt: eq.updatedAt ?? now,
         },
       });
+    } else {
+      await prisma.searchDocument.deleteMany({ where: { type: "manual", sourceId: eq.id } }).catch(() => {});
     }
   }
 }
@@ -80,7 +85,8 @@ export async function syncPostSearchDocuments() {
   const now = new Date();
 
   for (const post of posts) {
-    const content = stripHtml(post.body).slice(0, MANUAL_CONTENT_MAX);
+    const bodyPlain = stripHtml(post.body ?? "");
+    const content = bodyPlain.slice(0, MANUAL_CONTENT_MAX) || post.title;
     const url = `/posts/${post.id}`;
 
     await prisma.searchDocument.upsert({
@@ -92,13 +98,14 @@ export async function syncPostSearchDocuments() {
         sourceId: post.id,
         equipmentId: post.equipmentId,
         title: post.title,
-        content: content || post.title,
+        content,
         url,
         updatedAt: post.updatedAt ?? now,
       },
       update: {
         title: post.title,
-        content: content || post.title,
+        content,
+        url,
         updatedAt: post.updatedAt ?? now,
       },
     });
@@ -113,20 +120,24 @@ export async function syncEquipmentSearchDocumentById(equipmentId: string) {
   });
   if (!eq) return;
   const now = new Date();
-  const content = [eq.description ?? "", stripHtml(eq.manual ?? "")].join(" ").slice(0, MANUAL_CONTENT_MAX);
+  const desc = (eq.description ?? "").trim();
+  const manualPlain = stripHtml(eq.manual ?? "");
+  const content = [desc, manualPlain].filter(Boolean).join(" ").slice(0, MANUAL_CONTENT_MAX) || eq.name;
   const url = `/equipments/${eq.slug}`;
   await prisma.searchDocument.upsert({
     where: { type_sourceId: { type: "equipment", sourceId: eq.id } },
-    create: { type: "equipment", sourceId: eq.id, equipmentId: eq.id, title: eq.name, content: content || eq.name, url, updatedAt: eq.updatedAt ?? now },
-    update: { title: eq.name, content: content || eq.name, url, updatedAt: eq.updatedAt ?? now },
+    create: { type: "equipment", sourceId: eq.id, equipmentId: eq.id, title: eq.name, content, url, updatedAt: eq.updatedAt ?? now },
+    update: { title: eq.name, content, url, updatedAt: eq.updatedAt ?? now },
   });
   if (eq.manual?.trim()) {
-    const manualContent = stripHtml(eq.manual).slice(0, MANUAL_CONTENT_MAX);
+    const manualContent = manualPlain.slice(0, MANUAL_CONTENT_MAX);
     await prisma.searchDocument.upsert({
       where: { type_sourceId: { type: "manual", sourceId: eq.id } },
       create: { type: "manual", sourceId: eq.id, equipmentId: eq.id, title: `${eq.name} 사용 메뉴얼`, content: manualContent, url: `/equipments/${eq.slug}/manual`, updatedAt: eq.updatedAt ?? now },
       update: { title: `${eq.name} 사용 메뉴얼`, content: manualContent, updatedAt: eq.updatedAt ?? now },
     });
+  } else {
+    await prisma.searchDocument.deleteMany({ where: { type: "manual", sourceId: eq.id } }).catch(() => {});
   }
 }
 
@@ -141,11 +152,13 @@ export async function syncPostSearchDocumentById(postId: string) {
     return;
   }
   const now = new Date();
-  const content = stripHtml(post.body).slice(0, MANUAL_CONTENT_MAX);
+  const bodyPlain = stripHtml(post.body ?? "");
+  const content = bodyPlain.slice(0, MANUAL_CONTENT_MAX) || post.title;
+  const url = `/posts/${post.id}`;
   await prisma.searchDocument.upsert({
     where: { type_sourceId: { type: "qa", sourceId: post.id } },
-    create: { type: "qa", sourceId: post.id, equipmentId: post.equipmentId, title: post.title, content: content || post.title, url: `/posts/${post.id}`, updatedAt: post.updatedAt ?? now },
-    update: { title: post.title, content: content || post.title, updatedAt: post.updatedAt ?? now },
+    create: { type: "qa", sourceId: post.id, equipmentId: post.equipmentId, title: post.title, content, url, updatedAt: post.updatedAt ?? now },
+    update: { title: post.title, content, url, updatedAt: post.updatedAt ?? now },
   });
 }
 

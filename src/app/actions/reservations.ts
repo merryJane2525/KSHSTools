@@ -29,6 +29,7 @@ const CreateReservationSchema = z.object({
   title: z.string().max(100).optional(),
   studentNumber: z.string().max(4).optional(),
   note: z.string().max(500).optional(),
+  operatorId: z.string().uuid().optional(),
 });
 
 export async function createReservationAction(_: unknown, formData: FormData) {
@@ -41,6 +42,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
     title: (formData.get("title") || undefined) as string | undefined,
     studentNumber: (formData.get("studentNumber") || undefined) as string | undefined,
     note: (formData.get("note") || undefined) as string | undefined,
+    operatorId: (formData.get("operatorId") || undefined) as string | undefined,
   });
   if (!parsed.success) return { ok: false as const, error: "VALIDATION_ERROR" as const };
 
@@ -69,9 +71,19 @@ export async function createReservationAction(_: unknown, formData: FormData) {
 
   const equipment = await prisma.equipment.findUnique({
     where: { id: parsed.data.equipmentId },
-    select: { id: true, slug: true, isActive: true },
+    select: { id: true, slug: true, name: true, isActive: true },
   });
   if (!equipment || !equipment.isActive) return { ok: false as const, error: "INVALID_EQUIPMENT" as const };
+
+  let operatorId: string | null = null;
+  if (parsed.data.operatorId) {
+    const operator = await prisma.user.findFirst({
+      where: { id: parsed.data.operatorId, status: "ACTIVE", role: { in: ["OPERATOR", "ADMIN"] } },
+      select: { id: true },
+    });
+    if (!operator) return { ok: false as const, error: "INVALID_OPERATOR" as const };
+    operatorId = operator.id;
+  }
 
   const note = parsed.data.note?.trim() ? parsed.data.note.trim() : null;
   const title = parsed.data.title?.trim() ? parsed.data.title.trim() : null;
@@ -105,7 +117,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
           });
           if (userOverlap) return { ok: false as const, error: "USER_CONFLICT" as const };
 
-          await tx.reservation.create({
+          const reservation = await tx.reservation.create({
             data: {
               equipmentId: equipment.id,
               userId: me.id,
@@ -115,9 +127,26 @@ export async function createReservationAction(_: unknown, formData: FormData) {
               startAt,
               endAt,
               note,
+              operatorId: operatorId ?? undefined,
+              operatorStatus: operatorId ? "REQUESTED" : "NONE",
             },
             select: { id: true },
           });
+
+          if (operatorId && reservation.id) {
+            await tx.notification.create({
+              data: {
+                userId: operatorId,
+                type: "OPERATOR_REQUEST",
+                actorId: me.id,
+                reservationId: reservation.id,
+                title: "예약에 오퍼레이터로 지정되었습니다",
+                body: `${equipment.name} · ${startAt.toLocaleString("ko-KR")} ~ ${endAt.toLocaleString("ko-KR")} · 예약자: ${me.username ?? "알 수 없음"}`,
+                linkUrl: `/operator/reservations?highlight=${reservation.id}`,
+                dedupKey: `OPERATOR_REQUEST:RESERVATION:${reservation.id}`,
+              },
+            }).catch(() => {});
+          }
 
           return { ok: true as const };
         },
@@ -176,17 +205,52 @@ export async function cancelReservationAction(_: unknown, formData: FormData) {
 
   const reservation = await prisma.reservation.findUnique({
     where: { id: parsed.data.reservationId },
-    select: { id: true, userId: true, cancelledAt: true, equipment: { select: { slug: true } } },
+    select: {
+      id: true,
+      userId: true,
+      operatorId: true,
+      operatorStatus: true,
+      cancelledAt: true,
+      equipment: { select: { slug: true } },
+    },
   });
   if (!reservation) return { ok: false as const, error: "NOT_FOUND" as const };
   if (reservation.cancelledAt) return { ok: true as const };
   if (reservation.userId !== me.id && me.role !== "ADMIN" && me.role !== "OPERATOR")
     return { ok: false as const, error: "FORBIDDEN" as const };
 
-  await prisma.reservation.update({
-    where: { id: reservation.id },
-    data: { cancelledAt: new Date() },
-  });
+  await prisma.$transaction([
+    prisma.reservation.update({
+      where: { id: reservation.id },
+      data: {
+        cancelledAt: new Date(),
+        ...(["REQUESTED", "APPROVED"].includes(reservation.operatorStatus)
+          ? { operatorStatus: "CANCELED" as const }
+          : {}),
+      },
+    }),
+    prisma.operatorWorkLog
+      .updateMany({
+        where: { reservationId: reservation.id },
+        data: { status: "CANCELED" },
+      })
+      .then(() => {}),
+  ]);
+
+  if (reservation.operatorId && ["REQUESTED", "APPROVED"].includes(reservation.operatorStatus)) {
+    await prisma.notification.create({
+      data: {
+        userId: reservation.operatorId,
+        type: "RESERVATION_CANCELED",
+        actorId: me.id,
+        reservationId: reservation.id,
+        title: "예약이 취소되었습니다",
+        body: "오퍼레이터로 지정된 예약이 취소되었습니다.",
+        linkUrl: "/operator/reservations",
+        dedupKey: `RESERVATION_CANCELED:${reservation.id}:${reservation.operatorId}`,
+      },
+    }).catch(() => {});
+  }
 
   revalidatePath(`/equipments/${reservation.equipment.slug}`);
   revalidatePath("/reservations");
@@ -212,46 +276,121 @@ export async function approveReservationAction(_: unknown, formData: FormData) {
     where: { id: parsed.data.reservationId },
     select: {
       id: true,
+      userId: true,
       status: true,
       cancelledAt: true,
       equipmentId: true,
+      operatorId: true,
+      operatorStatus: true,
       startAt: true,
       endAt: true,
-      equipment: { select: { slug: true } },
+      equipment: { select: { slug: true, name: true } },
     },
   });
   if (!reservation) return { ok: false as const, error: "NOT_FOUND" as const };
   if (reservation.cancelledAt) return { ok: false as const, error: "ALREADY_CANCELLED" as const };
   if (reservation.status === "APPROVED") return { ok: true as const };
+  if (reservation.operatorStatus === "REQUESTED" && reservation.operatorId !== me.id && me.role !== "ADMIN")
+    return { ok: false as const, error: "FORBIDDEN" as const };
 
-  // 승인 시 같은 기자재·같은 시간대의 다른 APPROVED 예약이 있으면 충돌
-  const conflict = await prisma.reservation.findFirst({
+  const operatorId = reservation.operatorId ?? me.id;
+  const overlapStart = reservation.startAt;
+  const overlapEnd = reservation.endAt;
+
+  const equipmentConflict = await prisma.reservation.findFirst({
     where: {
       equipmentId: reservation.equipmentId,
       id: { not: reservation.id },
       cancelledAt: null,
       status: "APPROVED",
-      startAt: { lt: reservation.endAt },
-      endAt: { gt: reservation.startAt },
+      startAt: { lt: overlapEnd },
+      endAt: { gt: overlapStart },
     },
     select: { id: true },
   });
-  if (conflict) return { ok: false as const, error: "EQUIPMENT_CONFLICT" as const };
+  if (equipmentConflict) return { ok: false as const, error: "EQUIPMENT_CONFLICT" as const };
 
-  await prisma.reservation.update({
-    where: { id: reservation.id },
-    data: { status: "APPROVED" },
+  const operatorConflictReservation = await prisma.reservation.findFirst({
+    where: {
+      operatorId,
+      id: { not: reservation.id },
+      cancelledAt: null,
+      operatorStatus: "APPROVED",
+      status: "APPROVED",
+      startAt: { lt: overlapEnd },
+      endAt: { gt: overlapStart },
+    },
+    select: { id: true },
   });
+  if (operatorConflictReservation) return { ok: false as const, error: "OPERATOR_CONFLICT" as const };
+
+  const operatorConflictWorkLog = await prisma.operatorWorkLog.findFirst({
+    where: {
+      operatorId,
+      status: { in: ["SCHEDULED", "COMPLETED"] },
+      startAt: { lt: overlapEnd },
+      endAt: { gt: overlapStart },
+    },
+    select: { id: true },
+  });
+  if (operatorConflictWorkLog) return { ok: false as const, error: "OPERATOR_CONFLICT" as const };
+
+  const workedMinutes = Math.round((reservation.endAt.getTime() - reservation.startAt.getTime()) / (60 * 1000));
+
+  await prisma.$transaction([
+    prisma.reservation.update({
+      where: { id: reservation.id },
+      data: {
+        status: "APPROVED",
+        operatorStatus: "APPROVED",
+        operatorResponseAt: new Date(),
+      },
+    }),
+    prisma.operatorWorkLog.upsert({
+      where: { reservationId: reservation.id },
+      create: {
+        reservationId: reservation.id,
+        operatorId,
+        equipmentId: reservation.equipmentId,
+        userId: reservation.userId,
+        startAt: reservation.startAt,
+        endAt: reservation.endAt,
+        workedMinutes,
+        status: "SCHEDULED",
+      },
+      update: {
+        startAt: reservation.startAt,
+        endAt: reservation.endAt,
+        workedMinutes,
+        status: "SCHEDULED",
+      },
+    }),
+  ]);
+
+  await prisma.notification.create({
+    data: {
+      userId: reservation.userId,
+      type: "OPERATOR_APPROVED",
+      actorId: me.id,
+      reservationId: reservation.id,
+      title: "오퍼레이터가 예약을 승인했습니다",
+      body: `${reservation.equipment.name} · ${reservation.startAt.toLocaleString("ko-KR")} ~ ${reservation.endAt.toLocaleString("ko-KR")}`,
+      linkUrl: `/reservations/${reservation.equipment.slug}`,
+      dedupKey: `OPERATOR_APPROVED:RESERVATION:${reservation.id}`,
+    },
+  }).catch(() => {});
 
   revalidatePath(`/equipments/${reservation.equipment.slug}`);
   revalidatePath("/reservations");
   revalidatePath("/operator");
   revalidatePath("/operator/reservations");
+  revalidatePath("/operator/work");
   return { ok: true as const };
 }
 
 const RejectReservationSchema = z.object({
   reservationId: z.string().uuid(),
+  reason: z.string().max(500).optional(),
 });
 
 export async function rejectReservationAction(_: unknown, formData: FormData) {
@@ -260,20 +399,53 @@ export async function rejectReservationAction(_: unknown, formData: FormData) {
 
   const parsed = RejectReservationSchema.safeParse({
     reservationId: formData.get("reservationId"),
+    reason: (formData.get("reason") || formData.get("operatorNote")) as string | undefined,
   });
   if (!parsed.success) return { ok: false as const, error: "VALIDATION_ERROR" as const };
 
   const reservation = await prisma.reservation.findUnique({
     where: { id: parsed.data.reservationId },
-    select: { id: true, cancelledAt: true, equipment: { select: { slug: true } } },
+    select: {
+      id: true,
+      userId: true,
+      cancelledAt: true,
+      operatorId: true,
+      operatorStatus: true,
+      equipment: { select: { slug: true, name: true } },
+      startAt: true,
+      endAt: true,
+    },
   });
   if (!reservation) return { ok: false as const, error: "NOT_FOUND" as const };
   if (reservation.cancelledAt) return { ok: true as const };
+  if (reservation.operatorStatus === "REQUESTED" && reservation.operatorId !== me.id && me.role !== "ADMIN")
+    return { ok: false as const, error: "FORBIDDEN" as const };
+
+  const reason = parsed.data.reason?.trim() ?? null;
 
   await prisma.reservation.update({
     where: { id: reservation.id },
-    data: { cancelledAt: new Date() },
+    data: {
+      operatorStatus: "REJECTED",
+      operatorNote: reason,
+      operatorResponseAt: new Date(),
+    },
   });
+
+  await prisma.notification.create({
+    data: {
+      userId: reservation.userId,
+      type: "OPERATOR_REJECTED",
+      actorId: me.id,
+      reservationId: reservation.id,
+      title: "오퍼레이터가 예약을 거절했습니다",
+      body: reason
+        ? `${reservation.equipment.name} · ${reason}`
+        : `${reservation.equipment.name} · ${reservation.startAt.toLocaleString("ko-KR")} ~ ${reservation.endAt.toLocaleString("ko-KR")}`,
+      linkUrl: `/reservations/${reservation.equipment.slug}`,
+      dedupKey: `OPERATOR_REJECTED:RESERVATION:${reservation.id}`,
+    },
+  }).catch(() => {});
 
   revalidatePath(`/equipments/${reservation.equipment.slug}`);
   revalidatePath("/reservations");
