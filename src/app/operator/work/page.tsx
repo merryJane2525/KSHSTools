@@ -1,9 +1,21 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { OperatorWorkLogStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate, formatDateTime } from "@/lib/date";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
+
+type WorkLogRow = {
+  id: string;
+  startAt: Date;
+  endAt: Date;
+  workedMinutes: number;
+  status: OperatorWorkLogStatus;
+  equipment: { name: string; slug: string };
+  user: { username: string };
+  reservationId: string;
+};
 
 function getWeekRange(date: Date): { start: Date; end: Date } {
   const d = new Date(date);
@@ -94,7 +106,7 @@ export default async function OperatorWorkPage({
   };
 
   const weekLogs = workLogs.filter(
-    (w) =>
+    (w: WorkLogRow) =>
       w.startAt >= week.start &&
       w.endAt <= week.end &&
       (w.status === "SCHEDULED" || w.status === "COMPLETED")
@@ -153,7 +165,7 @@ export default async function OperatorWorkPage({
             <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">이번 주 예정된 근무가 없습니다.</p>
           ) : (
             <ul className="mt-3 space-y-2">
-              {weekLogs.map((w) => (
+              {weekLogs.map((w: WorkLogRow) => (
                 <li
                   key={w.id}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-100 dark:border-zinc-700 px-4 py-3 text-sm"
@@ -199,7 +211,7 @@ export default async function OperatorWorkPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {workLogs.map((w) => (
+                  {workLogs.map((w: WorkLogRow) => (
                     <tr key={w.id} className="border-b border-zinc-100 dark:border-zinc-800">
                       <td className="py-2 pr-4 text-zinc-900 dark:text-zinc-100">{formatDate(w.startAt)}</td>
                       <td className="py-2 pr-4 text-zinc-700 dark:text-zinc-300">
