@@ -46,8 +46,9 @@ export function FeaturedEquipments({ equipmentSlugMap }: FeaturedEquipmentsProps
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {FEATURED_EQUIPMENTS.map((equipment) => {
+        // DB에 해당 기자재가 있을 때만 매뉴얼 링크 사용 (slug가 DB와 일치해야 404 방지)
         const slugFromMap = equipmentSlugMap.get(equipment.name.toLowerCase());
-        const slug = slugFromMap ?? equipment.slug ?? null;
+        const slug = slugFromMap ?? null;
         const manualLink = slug ? `/equipments/${slug}/manual` : null;
 
         return (

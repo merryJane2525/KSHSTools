@@ -20,8 +20,18 @@ export default async function EquipmentManualPage({
     notFound();
   }
 
-  const equipment = await prisma.equipment.findUnique({
-    where: { slug },
+  // slug 별칭: 동일 기자재가 다른 slug로 등록된 경우 대비 (예: freeze-dryer ↔ 동결건조기)
+  const slugAliases: Record<string, string[]> = {
+    "freeze-dryer": ["동결건조기"],
+    "동결건조기": ["freeze-dryer"],
+  };
+  const slugsToTry = [slug, ...(slugAliases[slug] ?? [])];
+
+  let equipment = await prisma.equipment.findFirst({
+    where: {
+      slug: { in: slugsToTry },
+      isActive: true,
+    },
     select: {
       id: true,
       name: true,
@@ -32,7 +42,7 @@ export default async function EquipmentManualPage({
     },
   });
 
-  if (!equipment || !equipment.isActive) {
+  if (!equipment) {
     notFound();
   }
 
