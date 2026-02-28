@@ -27,7 +27,7 @@ const CreateReservationSchema = z.object({
   startAtLocal: z.string().min(1).max(32),
   endAtLocal: z.string().min(1).max(32),
   title: z.string().max(100).optional(),
-  studentNumber: z.string().max(32).optional(),
+  studentNumber: z.string().max(4).optional(),
   note: z.string().max(500).optional(),
 });
 
@@ -75,7 +75,10 @@ export async function createReservationAction(_: unknown, formData: FormData) {
 
   const note = parsed.data.note?.trim() ? parsed.data.note.trim() : null;
   const title = parsed.data.title?.trim() ? parsed.data.title.trim() : null;
-  const studentNumber = parsed.data.studentNumber?.trim() ? parsed.data.studentNumber.trim() : null;
+  const rawStudentNumber = parsed.data.studentNumber?.trim() ?? "";
+  const studentNumber = rawStudentNumber ? rawStudentNumber : null;
+  if (studentNumber !== null && !/^\d{4}$/.test(studentNumber))
+    return { ok: false as const, error: "INVALID_STUDENT_NUMBER" as const };
 
   // Serializable tx to reduce race conditions on overlap checks.
   // Retry on serialization failure.

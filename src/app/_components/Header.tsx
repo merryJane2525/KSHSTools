@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getCurrentUser } from "@/lib/auth";
 import { logoutAction } from "@/app/actions/auth";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
+import { SearchBar } from "@/app/_components/SearchBar";
 
 export async function Header() {
   const user = await getCurrentUser();
@@ -27,6 +28,9 @@ export async function Header() {
             </Link>
             <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/equipments">
               기자재
+            </Link>
+            <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors lg:hidden" href="/search">
+              검색
             </Link>
             {user && (
               <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/reservations">
@@ -57,6 +61,9 @@ export async function Header() {
               </Link>
             )}
           </nav>
+          <div className="hidden w-full min-w-0 lg:block lg:w-64 xl:w-80">
+            <SearchBar />
+          </div>
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 lg:flex-nowrap text-sm">

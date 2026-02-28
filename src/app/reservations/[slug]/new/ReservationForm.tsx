@@ -100,13 +100,17 @@ export function ReservationForm({
             />
           </label>
           <label className="block">
-            <span className="text-sm font-bold text-primary/80">학번</span>
+            <span className="text-sm font-bold text-primary/80">학번 (4자리 숫자)</span>
             <input
               type="text"
               name="studentNumber"
               defaultValue={defaultStudentNumber}
-              placeholder="학번을 입력하세요"
-              maxLength={32}
+              placeholder="예: 1234"
+              maxLength={4}
+              inputMode="numeric"
+              pattern="[0-9]{4}"
+              autoComplete="off"
+              title="학번은 4자리 숫자로 입력해 주세요."
               className="mt-1 w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-primary focus:ring-1 focus:ring-primary/20 dark:border-primary/20 dark:bg-primary/5"
             />
           </label>

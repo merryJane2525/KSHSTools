@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { extractMentionUsernames } from "@/lib/mentions";
 import { sendPushToUser } from "@/lib/push";
+import { syncPostSearchDocumentById } from "@/lib/search-index";
 
 type MentionTargetType = "POST" | "COMMENT";
 type NotificationType = "ASSIGNED" | "MENTIONED" | "COMMENTED" | "SYSTEM";
@@ -137,6 +138,7 @@ export async function createPostAction(_: unknown, formData: FormData) {
   });
   if (!mentionResult.ok) return mentionResult;
 
+  await syncPostSearchDocumentById(post.id).catch(() => {});
   redirect(`/posts/${post.id}`);
 }
 
@@ -244,6 +246,7 @@ export async function deletePostAction(_: unknown, formData: FormData) {
     data: { deletedAt: new Date() },
   });
 
+  await syncPostSearchDocumentById(parsed.data.postId).catch(() => {});
   revalidatePath("/community");
   revalidatePath(`/posts/${parsed.data.postId}`);
   return { ok: true as const };

@@ -14,9 +14,24 @@ function getDefaultDate(): string {
   return new Date().toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
 }
 
+function getMaxDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return d.toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
+}
+
 function parseDate(dateStr: string | undefined): string {
   if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return getDefaultDate();
   return dateStr;
+}
+
+/** 30일 이내로만 허용 */
+function clampToAllowedRange(dateYmd: string): string {
+  const min = getDefaultDate();
+  const max = getMaxDate();
+  if (dateYmd < min) return min;
+  if (dateYmd > max) return max;
+  return dateYmd;
 }
 
 export default async function NewReservationPage({ params, searchParams }: PageProps) {
@@ -25,7 +40,7 @@ export default async function NewReservationPage({ params, searchParams }: PageP
 
   const { slug } = await params;
   const resolvedSearch = await Promise.resolve(searchParams);
-  const defaultDate = parseDate(resolvedSearch.date);
+  const defaultDate = clampToAllowedRange(parseDate(resolvedSearch.date));
 
   const equipment = await prisma.equipment.findUnique({
     where: { slug, isActive: true },
@@ -38,7 +53,8 @@ export default async function NewReservationPage({ params, searchParams }: PageP
     select: { username: true, studentNumber: true },
   });
   const defaultStudentName = user?.username ?? "";
-  const defaultStudentNumber = user?.studentNumber ?? "";
+  const defaultStudentNumber =
+    user?.studentNumber && /^\d{4}$/.test(user.studentNumber) ? user.studentNumber : "";
 
   return (
     <div className="space-y-6">

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { processManualContent } from "@/lib/markdown";
+import { syncEquipmentSearchDocumentById } from "@/lib/search-index";
 
 function slugify(input: string) {
   const slug = input
@@ -35,14 +36,19 @@ export async function createEquipmentAction(_: unknown, formData: FormData) {
 
   const slug = parsed.data.slug ? slugify(parsed.data.slug) : slugify(parsed.data.name);
 
+  let createdId: string | null = null;
   try {
-    await prisma.equipment.create({
+    const created = await prisma.equipment.create({
       data: { name: parsed.data.name, slug, isActive: true },
+      select: { id: true },
     });
+    createdId = created.id;
   } catch {
     return { ok: false as const, error: "CONFLICT" as const };
   }
-
+  if (createdId) {
+    await syncEquipmentSearchDocumentById(createdId).catch(() => {});
+  }
   revalidatePath("/equipments");
   return { ok: true as const };
 }
@@ -107,6 +113,7 @@ export async function updateEquipmentManualAction(_: unknown, formData: FormData
 
   revalidatePath(`/equipments/${equipment.slug}`);
   revalidatePath(`/equipments/${equipment.slug}/manual`);
+  await syncEquipmentSearchDocumentById(parsed.data.equipmentId).catch(() => {});
   return { ok: true as const };
 }
 

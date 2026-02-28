@@ -61,6 +61,12 @@ enum ReservationStatus {
   APPROVED  // 승인됨 (시간대 확정)
 }
 
+enum SearchDocumentType {
+  equipment
+  manual
+  qa
+}
+
 model User {
   id              String     @id @default(uuid())
   email           String     @unique
@@ -288,3 +294,20 @@ model AuditLog {
   @@index([actorId, createdAt])
 }
 
+model SearchDocument {
+  id          String              @id @default(uuid())
+  type        SearchDocumentType
+  sourceId    String
+  equipmentId String?
+  title       String
+  content     String
+  tags        String[]            @default([])
+  url         String
+  updatedAt   DateTime            @updatedAt
+  popularity  Int                 @default(0)
+
+  @@unique([type, sourceId])
+  @@index([type])
+  @@index([equipmentId])
+  @@index([updatedAt])
+}
