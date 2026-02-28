@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       byType[doc.type].push(doc);
   }
 
-  const equipmentIds = [...new Set(scored.map((d) => d.equipmentId).filter(Boolean))] as string[];
+  const equipmentIds = [...new Set(scored.map((d: ScoredDoc) => d.equipmentId).filter(Boolean))] as string[];
   const equipmentMap = new Map<string, string>();
   if (equipmentIds.length > 0) {
     const equipments = await prisma.equipment.findMany({

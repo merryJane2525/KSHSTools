@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
   const start = (page - 1) * limit;
   const pageDocs = scored.slice(start, start + limit);
 
-  const equipmentIds = [...new Set(pageDocs.map((d) => d.equipmentId).filter(Boolean))] as string[];
+  const equipmentIds = [...new Set(pageDocs.map((d: ScoredDoc) => d.equipmentId).filter(Boolean))] as string[];
   const equipmentMap = new Map<string, string>();
   if (equipmentIds.length > 0) {
     const equipments = await prisma.equipment.findMany({
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     equipments.forEach((e) => equipmentMap.set(e.id, e.name));
   }
 
-  const results = pageDocs.map((doc) => {
+  const results = pageDocs.map((doc: ScoredDoc) => {
     const snippet = buildSnippet(doc.content, expanded, MAX_SNIPPET);
     const titleHighlight = doc.title;
     const contentHighlight = snippet;
