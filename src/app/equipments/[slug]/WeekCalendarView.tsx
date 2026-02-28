@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 
-const SLOTS_PER_DAY = 72; // 08:00~20:00, 10분 단위 => 12*6 = 72
-const START_HOUR = 8;
-const SLOT_MINUTES = 10;
+// 00:00~24:00, 30분 단위 => 48슬롯 (전체 날짜 예약 표시)
+const SLOTS_PER_DAY = 48;
+const START_HOUR = 0;
+const SLOT_MINUTES = 30;
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
 
 type ReservationForCalendar = {
@@ -40,10 +41,12 @@ export function WeekCalendarView({
   weekStart: string;
   reservations: ReservationForCalendar[];
 }) {
+  // KST 기준 주 시작(월 00:00) 시각
   const weekStartDate = new Date(weekStart + "T00:00:00+09:00");
   const weekStartMs = weekStartDate.getTime();
 
-  const slotToMs = (dayIndex: number, slotIndex: number) =>
+  // 해당 요일·슬롯의 시작 시각(ms, UTC)
+  const slotToMs = (dayIndex: number, slotIndex: number): number =>
     weekStartMs +
     dayIndex * 24 * 60 * 60 * 1000 +
     (START_HOUR * 60 * 60 * 1000 + slotIndex * SLOT_MINUTES * 60 * 1000);
@@ -54,15 +57,17 @@ export function WeekCalendarView({
     for (const r of reservations) {
       const rStart = new Date(r.startAtIso).getTime();
       const rEnd = new Date(r.endAtIso).getTime();
+      // 예약 구간과 슬롯 구간이 겹치는지
       if (rStart < slotEnd && rEnd > slotStart) return { username: r.username, status: r.status };
     }
     return null;
   };
 
   const timeLabels: string[] = [];
+  const slotsPerHour = 60 / SLOT_MINUTES;
   for (let i = 0; i < SLOTS_PER_DAY; i++) {
-    const h = START_HOUR + Math.floor(i / 6);
-    const m = (i % 6) * SLOT_MINUTES;
+    const h = START_HOUR + Math.floor(i / slotsPerHour);
+    const m = (i % slotsPerHour) * SLOT_MINUTES;
     timeLabels.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
   }
 
@@ -90,9 +95,9 @@ export function WeekCalendarView({
         </div>
       </div>
       <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-        · 10분 단위 (08:00~20:00) · 파란색=승인, 노란색=대기
+        · 30분 단위 (00:00~24:00) · 파란색=승인, 노란색=대기
       </div>
-      <div className="max-h-[420px] overflow-y-auto">
+      <div className="max-h-[520px] overflow-y-auto">
       <table className="w-full border-collapse text-xs">
         <thead>
           <tr>
@@ -120,11 +125,11 @@ export function WeekCalendarView({
                 return (
                   <td
                     key={dayIndex}
-                    className="border border-zinc-200 dark:border-zinc-600 p-0.5 align-top"
+                    className="min-h-[22px] min-w-[52px] border border-zinc-200 dark:border-zinc-600 p-0.5 align-top"
                   >
                     {content ? (
                       <span
-                        className={`inline-block w-full rounded px-1 py-0.5 truncate ${
+                        className={`inline-block min-h-[18px] w-full rounded px-1 py-0.5 truncate text-[10px] ${
                           content.status === "APPROVED"
                             ? "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200"
                             : "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200"
@@ -133,7 +138,9 @@ export function WeekCalendarView({
                       >
                         @{content.username}
                       </span>
-                    ) : null}
+                    ) : (
+                      <span className="inline-block min-h-[18px] w-full" aria-hidden />
+                    )}
                   </td>
                 );
               })}
