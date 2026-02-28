@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate } from "@/lib/date";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
-import { ReservationsPanel, type ReservationListItem } from "./reservations-ui";
 import { parseWeekParam } from "@/lib/week";
 import { WeekCalendarView } from "./WeekCalendarView";
 
@@ -15,16 +14,6 @@ type RecentPostItem = {
   id: string;
   title: string;
   createdAt: Date;
-};
-
-type ReservationRawItem = {
-  id: string;
-  userId: string;
-  status: "PENDING" | "APPROVED";
-  startAt: Date;
-  endAt: Date;
-  note: string | null;
-  user: { username: string };
 };
 
 type CalendarReservationRawItem = {
@@ -37,7 +26,7 @@ type CalendarReservationRawItem = {
 
 type PageProps = {
   params: Promise<{ slug: string }> | { slug: string };
-  searchParams?: Promise<{ week?: string; reservation_error?: string }> | { week?: string; reservation_error?: string };
+  searchParams?: Promise<{ week?: string }> | { week?: string };
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -68,9 +57,6 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
   const resolvedSearch = searchParams ? await Promise.resolve(searchParams) : {};
   const { slug } = resolvedParams;
   const weekStart = parseWeekParam(resolvedSearch.week);
-  const reservationError =
-    typeof resolvedSearch.reservation_error === "string" ? resolvedSearch.reservation_error : null;
-  const weekParam = typeof resolvedSearch.week === "string" ? resolvedSearch.week : null;
 
   if (!slug) {
     notFound();
@@ -101,32 +87,6 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
       createdAt: true,
     },
   });
-
-  const now = new Date();
-  const reservationsRaw = await prisma.reservation.findMany({
-    where: { equipmentId: equipment.id, cancelledAt: null, endAt: { gte: now } },
-    orderBy: { startAt: "asc" },
-    take: 100,
-    select: {
-      id: true,
-      userId: true,
-      status: true,
-      startAt: true,
-      endAt: true,
-      note: true,
-      user: { select: { username: true } },
-    },
-  });
-
-  const reservations: ReservationListItem[] = (reservationsRaw as ReservationRawItem[]).map((r) => ({
-    id: r.id,
-    status: r.status,
-    startAtIso: r.startAt.toISOString(),
-    endAtIso: r.endAt.toISOString(),
-    note: r.note,
-    username: r.user.username,
-    isMine: r.userId === me.id,
-  }));
 
   const weekStartDate = new Date(weekStart + "T00:00:00+09:00");
   const weekEndDate = new Date(weekStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -229,22 +189,12 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
       </div>
       </AnimateOnScroll>
 
-      {/* 예약: 주간 캘린더 + 예약 폼/현황 */}
+      {/* 예약 현황: 타임테이블만 표시 (예약 신청은 예약 탭에서) */}
       <AnimateOnScroll>
         <WeekCalendarView
           equipmentSlug={equipment.slug}
           weekStart={weekStart}
           reservations={calendarItems}
-        />
-      </AnimateOnScroll>
-      <AnimateOnScroll>
-        <ReservationsPanel
-          equipmentId={equipment.id}
-          equipmentSlug={equipment.slug}
-          reservations={reservations}
-          reservationError={reservationError}
-          weekParam={weekParam}
-          canManageReservations={me.role === "ADMIN" || me.role === "OPERATOR"}
         />
       </AnimateOnScroll>
 
