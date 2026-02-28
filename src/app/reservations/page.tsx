@@ -2,97 +2,95 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { formatDateTime } from "@/lib/date";
-import { cancelReservationFormAction } from "@/app/actions/reservations";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 
-type ReservationItem = {
+type EquipmentItem = {
   id: string;
-  status: string;
-  startAt: Date;
-  endAt: Date;
-  note: string | null;
-  equipment: { name: string; slug: string };
+  name: string;
+  slug: string;
+  description: string | null;
 };
 
 export default async function ReservationsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
 
-  const now = new Date();
-  const reservations: ReservationItem[] = await prisma.reservation.findMany({
-    where: { userId: me.id, cancelledAt: null, endAt: { gte: now } },
-    orderBy: { startAt: "asc" },
-    take: 200,
-    select: {
-      id: true,
-      status: true,
-      startAt: true,
-      endAt: true,
-      note: true,
-      equipment: { select: { name: true, slug: true } },
-    },
+  const equipments: EquipmentItem[] = await prisma.equipment.findMany({
+    where: { isActive: true },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, slug: true, description: true },
   });
 
   return (
     <div className="space-y-6">
       <AnimateOnScroll>
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">내 예약</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">내가 예약한 시간대를 확인하고 취소할 수 있습니다.</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-primary">기자재 예약</h1>
+            <p className="mt-1 text-sm text-primary/70">예약할 기자재를 선택한 뒤 예약하기 버튼을 눌러 주세요.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary/50">가나다순</span>
+            <Link
+              href="/reservations/my"
+              className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
+            >
+              내 예약 목록
+            </Link>
+          </div>
         </div>
       </AnimateOnScroll>
 
-      <AnimateOnScroll>
-        {reservations.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 text-sm text-zinc-600 dark:text-zinc-400">
-            아직 예약이 없습니다. 기자재 페이지에서 예약을 진행해 주세요.
+      <AnimateOnScroll className="space-y-4">
+        {equipments.length === 0 ? (
+          <div className="rounded-xl border border-primary/10 bg-white dark:bg-[#15191d] p-6 text-sm text-primary/70 dark:border-primary/20">
+            예약 가능한 기자재가 없습니다.
           </div>
         ) : (
-          <div className="space-y-3">
-            {reservations.map((r) => (
-              <div key={r.id} className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {formatDateTime(r.startAt)} ~ {formatDateTime(r.endAt)}
-                    </div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Link className="font-medium text-zinc-900 dark:text-zinc-100 hover:underline" href={`/equipments/${r.equipment.slug}`}>
-                        {r.equipment.name}
-                      </Link>
-                      <span className={`rounded-full px-2 py-0.5 text-xs ${r.status === "APPROVED" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200" : "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200"}`}>
-                        {r.status === "APPROVED" ? "승인" : "대기"}
-                      </span>
-                    </div>
-                    {r.note ? (
-                      <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap break-words">
-                        {r.note}
-                      </div>
+          <ul className="space-y-4">
+            {equipments.map((eq) => (
+              <li
+                key={eq.id}
+                className="rounded-xl border border-primary/10 bg-white p-5 shadow-sm transition-all hover:border-primary/20 hover:shadow-md dark:bg-[#15191d] dark:border-primary/20"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg font-bold tracking-tight text-primary">{eq.name}</h2>
+                    {eq.description ? (
+                      <p className="mt-1 text-sm leading-relaxed text-primary/70">{eq.description}</p>
                     ) : null}
                   </div>
-
-                  <div className="shrink-0 flex items-center gap-2">
+                  <div className="shrink-0">
                     <Link
-                      href={`/equipments/${r.equipment.slug}`}
-                      className="rounded-xl border border-zinc-200 dark:border-zinc-600 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+                      href={`/reservations/${eq.slug}`}
+                      className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
                     >
-                      이동
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      예약하기
                     </Link>
-                    <form action={cancelReservationFormAction}>
-                      <input type="hidden" name="reservationId" value={r.id} />
-                      <button className="rounded-xl border border-zinc-200 dark:border-zinc-600 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
-                        취소
-                      </button>
-                    </form>
                   </div>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </AnimateOnScroll>
     </div>
   );
 }
-

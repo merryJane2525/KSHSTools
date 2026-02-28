@@ -32,23 +32,23 @@ const EQUIPMENT_LIST = [
 
 export function EquipmentTable({ equipmentSlugMap }: EquipmentTableProps) {
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-zinc-200 dark:bg-zinc-700">
+    <div className="bg-white dark:bg-[#15191d] rounded-2xl border border-primary/10 dark:border-primary/20 shadow-sm overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-primary/10 dark:bg-primary/20">
         {EQUIPMENT_LIST.map((equipment, index) => {
           const slug = equipmentSlugMap.get(equipment.toLowerCase());
           const cellContent = slug ? (
             <Link
               href={`/equipments/${slug}`}
-              className="block px-4 py-3 text-sm text-center text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+              className="block px-4 py-3 text-sm text-center text-primary/70 hover:bg-primary/5 hover:text-primary transition-colors dark:text-primary/80 dark:hover:bg-primary/20"
             >
               {equipment}
             </Link>
           ) : (
-            <div className="px-4 py-3 text-sm text-center text-zinc-500 dark:text-zinc-400">{equipment}</div>
+            <div className="px-4 py-3 text-sm text-center text-primary/50 dark:text-primary/60">{equipment}</div>
           );
 
           return (
-            <div key={index} className="bg-white dark:bg-zinc-900">
+            <div key={index} className="bg-white dark:bg-[#15191d]">
               {cellContent}
             </div>
           );

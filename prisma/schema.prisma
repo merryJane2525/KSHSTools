@@ -66,6 +66,7 @@ model User {
   email           String     @unique
   passwordHash    String
   username        String     @unique
+  studentNumber   String?    // 학번 (예약 신청 시 표시/미리채움)
   role            UserRole   @default(USER)
   status          UserStatus @default(ACTIVE)
   emailVerifiedAt DateTime?
@@ -109,6 +110,7 @@ model Equipment {
   id           String  @id @default(uuid())
   name         String  @unique
   slug         String  @unique
+  description  String? // 예약 카드/상세용 간단한 설명
   isActive     Boolean @default(true)
   manual       String? // 사용 메뉴얼 (마크다운 또는 HTML)
   manualImages Json?   // 메뉴얼 이미지 데이터 배열 (Base64)
@@ -121,14 +123,16 @@ model Equipment {
 }
 
 model Reservation {
-  id          String           @id @default(uuid())
-  equipmentId String
-  userId      String
-  status      ReservationStatus @default(PENDING)
+  id            String             @id @default(uuid())
+  equipmentId   String
+  userId        String
+  status        ReservationStatus  @default(PENDING)
 
-  startAt     DateTime
-  endAt       DateTime
-  note        String?
+  title         String?            // 예약 제목
+  studentNumber String?            // 예약 시 입력한 학번
+  startAt       DateTime
+  endAt         DateTime
+  note          String?            // 설명
 
   cancelledAt DateTime?
 

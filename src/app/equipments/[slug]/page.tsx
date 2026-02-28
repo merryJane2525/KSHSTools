@@ -163,15 +163,21 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{equipment.name}</h1>
             <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">/{equipment.slug}</div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link
-              className="rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+              className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
+              href={`/reservations/${equipment.slug}`}
+            >
+              예약하기
+            </Link>
+            <Link
+              className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
               href={`/equipments/${equipment.slug}/manual`}
             >
               사용 메뉴얼
             </Link>
             <Link
-              className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90"
               href={`/posts/new?equipmentId=${equipment.id}`}
             >
               질문 작성하기

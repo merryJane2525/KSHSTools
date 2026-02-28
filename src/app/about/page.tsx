@@ -28,18 +28,18 @@ export default function AboutPage() {
         <div className="space-y-2">
           <Link
             href="/"
-            className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline"
+            className="text-sm text-primary/60 hover:text-primary hover:underline"
           >
             ← 홈으로
           </Link>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-2xl font-bold tracking-tight text-primary">
             강원과학고등학교(KSHS) 심화기자재 소개
           </h1>
         </div>
       </AnimateOnScroll>
 
       <AnimateOnScroll>
-        <div className="space-y-5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 shadow-sm text-sm leading-7 text-zinc-700 dark:text-zinc-300">
+        <div className="space-y-5 rounded-2xl border border-primary/10 dark:border-primary/20 bg-white dark:bg-[#15191d] p-6 shadow-sm text-sm leading-7 text-primary/70">
           <p>
             강원과학고등학교(KSHS) 심화 기자재는 단순한 이론 학습만으로는 익히기 어렵고, 실제 사용 경험을 통해 비로소 제대로 이해할 수 있습니다. 그러나 하나의 연구에 오랜 시간 집중하는 환경에서는 다양한 기기를 접할 기회가 제한되고, 같은 공간에 있으면서도 동기·선후배 간의 노하우가 충분히 공유되지 못하는 경우가 많습니다. 그 결과, 기자재를 올바르게 사용하지 못해 장비가 손상되거나, 안전사고로 이어질 위험도 존재합니다.
           </p>
@@ -71,7 +71,7 @@ export default function AboutPage() {
         <div className="flex justify-center">
           <Link
             href="/"
-            className="rounded-xl bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors"
+            className="rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition-all"
           >
             홈으로 돌아가기
           </Link>

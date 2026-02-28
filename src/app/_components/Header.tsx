@@ -8,10 +8,10 @@ export async function Header() {
   const user = await getCurrentUser();
 
   return (
-    <header className="relative z-50 border-b border-zinc-200/80 bg-white/85 dark:border-zinc-800/80 dark:bg-zinc-900/85 backdrop-blur-sm">
+    <header className="relative z-50 border-b border-primary/10 bg-white/90 dark:bg-[#15191d]/90 dark:border-primary/20 backdrop-blur-sm">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 hover:opacity-80 transition-opacity">
+          <Link href="/" className="flex items-center gap-2 text-sm font-bold tracking-tight text-primary hover:opacity-90 transition-opacity">
             <Image
               src="/favicon.ico"
               alt="KSHS 심화기자재"
@@ -21,38 +21,38 @@ export async function Header() {
             />
             <span>KSHS 심화기자재</span>
           </Link>
-          <nav className="flex items-center gap-3 text-sm text-zinc-700 dark:text-zinc-300">
-            <Link className="hover:text-zinc-900 dark:hover:text-zinc-100" href="/community">
+          <nav className="flex items-center gap-1 text-sm">
+            <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/community">
               커뮤니티
             </Link>
-            <Link className="hover:text-zinc-900 dark:hover:text-zinc-100" href="/equipments">
+            <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/equipments">
               기자재
             </Link>
             {user && (
-              <Link className="hover:text-zinc-900 dark:hover:text-zinc-100" href="/reservations">
+              <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/reservations">
                 예약
               </Link>
             )}
-            <Link className="hover:text-zinc-900 dark:hover:text-zinc-100" href="/notifications">
+            <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/notifications">
               알림
             </Link>
             {user && (user.role === "OPERATOR" || user.role === "ADMIN") && (
-              <Link className="hover:text-zinc-900 dark:hover:text-zinc-100" href="/operator">
+              <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/operator">
                 오퍼레이터
               </Link>
             )}
             {user && user.role === "ADMIN" && (
               <>
-                <Link className="hover:text-zinc-900 dark:hover:text-zinc-100" href="/admin/users">
+                <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/admin/users">
                   사용자 관리
                 </Link>
-                <Link className="hover:text-zinc-900 dark:hover:text-zinc-100" href="/admin/posts">
+                <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/admin/posts">
                   게시글 관리
                 </Link>
               </>
             )}
             {user && (
-              <Link className="hover:text-zinc-900 dark:hover:text-zinc-100" href="/posts/new">
+              <Link className="rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/posts/new">
                 게시글 작성
               </Link>
             )}
@@ -63,24 +63,24 @@ export async function Header() {
           <ThemeToggle />
           {user ? (
             <>
-              <div className="hidden items-center gap-2 text-zinc-700 dark:text-zinc-300 sm:flex">
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">@{user.username}</span>
-                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              <div className="hidden items-center gap-2 text-primary/70 sm:flex">
+                <span className="font-medium text-primary">@{user.username}</span>
+                <span className="rounded-md border border-primary/10 bg-primary/5 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary/70">
                   {user.role}
                 </span>
               </div>
               <form action={logoutAction}>
-                <button className="rounded-xl border border-zinc-200 px-3 py-1.5 text-zinc-900 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800">
+                <button type="submit" className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20">
                   로그아웃
                 </button>
               </form>
             </>
           ) : (
             <>
-              <Link className="rounded-xl border border-zinc-200 px-3 py-1.5 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800" href="/login">
+              <Link className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20" href="/login">
                 로그인
               </Link>
-              <Link className="rounded-xl bg-zinc-900 px-3 py-1.5 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200" href="/signup">
+              <Link className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90 dark:bg-primary dark:text-[#15191d]" href="/signup">
                 회원가입
               </Link>
             </>

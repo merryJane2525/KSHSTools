@@ -17,8 +17,8 @@ export function FeaturedEquipmentImage({ src, alt, displayName }: Props) {
 
   if (failed) {
     return (
-      <div className="aspect-video bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-        <div className="text-center text-zinc-400 dark:text-zinc-500">
+      <div className="aspect-video bg-primary/5 dark:bg-primary/10 flex items-center justify-center">
+        <div className="text-center text-primary/50">
           <div className="text-4xl mb-2">🔬</div>
           <div className="text-xs">{displayName}</div>
         </div>
@@ -27,7 +27,7 @@ export function FeaturedEquipmentImage({ src, alt, displayName }: Props) {
   }
 
   return (
-    <div className="aspect-video relative bg-zinc-100 dark:bg-zinc-800">
+    <div className="aspect-video relative bg-primary/5 dark:bg-primary/10">
       <Image
         src={src}
         alt={alt}

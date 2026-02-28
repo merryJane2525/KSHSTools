@@ -53,7 +53,7 @@ export function FeaturedEquipments({ equipmentSlugMap }: FeaturedEquipmentsProps
         return (
           <div
             key={equipment.name}
-            className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-300"
+            className="bg-white dark:bg-[#15191d] rounded-2xl border border-primary/10 dark:border-primary/20 shadow-sm overflow-hidden hover:shadow-md hover:border-primary/20 transition-all duration-300"
           >
             {/* 이미지 영역: public/equipments/ 에 해당 파일이 있으면 표시, 없으면 플레이스홀더 */}
             <FeaturedEquipmentImage
@@ -65,9 +65,9 @@ export function FeaturedEquipments({ equipmentSlugMap }: FeaturedEquipmentsProps
             {/* 내용 영역 */}
             <div className="p-4 space-y-3">
               <div>
-                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">{equipment.displayName}</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{equipment.description}</p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-3 leading-relaxed">
+                <h3 className="font-bold text-primary">{equipment.displayName}</h3>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-primary/50 mt-1">{equipment.description}</p>
+                <p className="text-sm text-primary/70 mt-3 leading-relaxed">
                   {equipment.detail}
                 </p>
               </div>
@@ -75,12 +75,12 @@ export function FeaturedEquipments({ equipmentSlugMap }: FeaturedEquipmentsProps
               {manualLink ? (
                 <Link
                   href={manualLink}
-                  className="block w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white text-center hover:bg-zinc-800 transition-colors dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  className="block w-full rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white text-center hover:opacity-90 transition-all"
                 >
                   매뉴얼 보기 →
                 </Link>
               ) : (
-                <div className="text-xs text-zinc-400 dark:text-zinc-500 text-center py-2">
+                <div className="text-xs text-primary/50 text-center py-2">
                   매뉴얼 준비 중
                 </div>
               )}

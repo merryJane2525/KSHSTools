@@ -26,7 +26,9 @@ const CreateReservationSchema = z.object({
   equipmentId: z.string().uuid(),
   startAtLocal: z.string().min(1).max(32),
   endAtLocal: z.string().min(1).max(32),
-  note: z.string().max(200).optional(),
+  title: z.string().max(100).optional(),
+  studentNumber: z.string().max(32).optional(),
+  note: z.string().max(500).optional(),
 });
 
 export async function createReservationAction(_: unknown, formData: FormData) {
@@ -36,6 +38,8 @@ export async function createReservationAction(_: unknown, formData: FormData) {
     equipmentId: formData.get("equipmentId"),
     startAtLocal: formData.get("startAt"),
     endAtLocal: formData.get("endAt"),
+    title: (formData.get("title") || undefined) as string | undefined,
+    studentNumber: (formData.get("studentNumber") || undefined) as string | undefined,
     note: (formData.get("note") || undefined) as string | undefined,
   });
   if (!parsed.success) return { ok: false as const, error: "VALIDATION_ERROR" as const };
@@ -65,6 +69,8 @@ export async function createReservationAction(_: unknown, formData: FormData) {
   if (!equipment || !equipment.isActive) return { ok: false as const, error: "INVALID_EQUIPMENT" as const };
 
   const note = parsed.data.note?.trim() ? parsed.data.note.trim() : null;
+  const title = parsed.data.title?.trim() ? parsed.data.title.trim() : null;
+  const studentNumber = parsed.data.studentNumber?.trim() ? parsed.data.studentNumber.trim() : null;
 
   // Serializable tx to reduce race conditions on overlap checks.
   // Retry on serialization failure.
@@ -96,6 +102,8 @@ export async function createReservationAction(_: unknown, formData: FormData) {
               equipmentId: equipment.id,
               userId: me.id,
               status: "PENDING",
+              title,
+              studentNumber,
               startAt,
               endAt,
               note,
@@ -113,6 +121,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
 
       revalidatePath(`/equipments/${equipment.slug}`);
       revalidatePath("/reservations");
+      revalidatePath(`/reservations/${equipment.slug}`);
       revalidatePath("/operator/reservations");
       return { ok: true as const };
     } catch (err: unknown) {
@@ -130,7 +139,15 @@ export async function createReservationAction(_: unknown, formData: FormData) {
 export async function createReservationFormAction(formData: FormData) {
   const slug = formData.get("equipmentSlug");
   const week = formData.get("week");
-  const base = slug && typeof slug === "string" ? `/equipments/${encodeURIComponent(slug)}` : "/equipments";
+  const redirectBase = formData.get("redirectBase");
+  const base =
+    slug && typeof slug === "string"
+      ? redirectBase === "reservations"
+        ? `/reservations/${encodeURIComponent(slug)}`
+        : `/equipments/${encodeURIComponent(slug)}`
+      : redirectBase === "reservations"
+        ? "/reservations"
+        : "/equipments";
   const q = week && typeof week === "string" ? `&week=${encodeURIComponent(week)}` : "";
   const result = await createReservationAction(null, formData);
   if (!result.ok) redirect(`${base}?reservation_error=${result.error}${q}`);

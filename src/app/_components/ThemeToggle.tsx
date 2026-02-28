@@ -9,7 +9,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="rounded-xl border border-zinc-200 bg-white p-2 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+      className="rounded-lg border border-primary/20 bg-white p-2 text-primary/70 hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:text-primary/80 dark:hover:bg-primary/20"
       title={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
       aria-label={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
     >

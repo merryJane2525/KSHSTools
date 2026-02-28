@@ -58,7 +58,7 @@ export default async function Home() {
             />
           </div>
           <div
-            className="absolute inset-0 bg-zinc-900/80 dark:bg-zinc-950/88"
+            className="absolute inset-0 bg-primary/80 dark:bg-[#15191d]/88"
             aria-hidden
           />
         </div>
@@ -66,16 +66,16 @@ export default async function Home() {
         {/* 제목 + About 버튼 — 영상 중앙에 배치 */}
         <div className="relative z-10 h-full flex flex-col justify-center items-center px-6">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-100 drop-shadow-md home-animate-fade-in-up">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-md home-animate-fade-in-up">
               KSHS 심화기자재
             </h1>
-            <p className="text-lg text-zinc-300 max-w-2xl mx-auto home-animate-fade-in-up home-delay-1 drop-shadow-sm">
+            <p className="text-lg text-white/90 max-w-2xl mx-auto home-animate-fade-in-up home-delay-1 drop-shadow-sm">
               심화 기자재의 체계적인 사용 정보와 실험 경험을 공유하는 플랫폼
             </p>
             <div className="home-animate-fade-in-up home-delay-2">
               <Link
                 href="/about"
-                className="inline-block rounded-xl bg-white/95 px-6 py-3 text-sm font-medium text-zinc-900 hover:bg-white transition-colors shadow-lg"
+                className="inline-block rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition-all shadow-lg"
               >
                 About
               </Link>
@@ -88,20 +88,20 @@ export default async function Home() {
       <div className="space-y-12 py-12">
         {/* 심화기자재 목록 — 스크롤 시 등장 */}
         <AnimateOnScroll className="space-y-4 flex flex-col items-center">
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h2 className="text-2xl font-bold tracking-tight text-primary">
             심화기자재 목록
           </h2>
-          <div className="w-full max-w-2xl rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+          <div className="w-full max-w-2xl rounded-xl border border-primary/10 bg-white dark:bg-[#15191d] p-5 shadow-sm hover:border-primary/20 hover:shadow-md transition-all dark:border-primary/20">
             <EquipmentTable equipmentSlugMap={equipmentSlugMap} />
           </div>
         </AnimateOnScroll>
 
         {/* 대표 장비 섹션 — 스크롤 시 등장 */}
         <AnimateOnScroll className="space-y-4">
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h2 className="text-2xl font-bold tracking-tight text-primary">
             대표 장비
           </h2>
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+          <div className="rounded-xl border border-primary/10 bg-white dark:bg-[#15191d] p-5 shadow-sm hover:border-primary/20 hover:shadow-md transition-all dark:border-primary/20">
             <FeaturedEquipments equipmentSlugMap={equipmentSlugMap} />
           </div>
         </AnimateOnScroll>
