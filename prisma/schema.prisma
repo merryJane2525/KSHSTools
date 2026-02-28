@@ -1,0 +1,286 @@
+generator client {
+  provider   = "prisma-client-js"
+  // 드라이버 어댑터(@prisma/adapter-better-sqlite3)를 사용하는
+  // Prisma v7 "client" 엔진 아키텍처를 사용합니다.
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  OPERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum PostStatus {
+  OPEN
+  RESOLVED
+}
+
+enum MentionTargetType {
+  POST
+  COMMENT
+}
+
+enum NotificationType {
+  ASSIGNED
+  MENTIONED
+  COMMENTED
+  SYSTEM
+}
+
+enum ReportTargetType {
+  POST
+  COMMENT
+}
+
+enum ReportReason {
+  SPAM
+  ABUSE
+  PRIVACY
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum ReservationStatus {
+  PENDING   // 대기 (오퍼레이터 승인 전)
+  APPROVED  // 승인됨 (시간대 확정)
+}
+
+model User {
+  id              String     @id @default(uuid())
+  email           String     @unique
+  passwordHash    String
+  username        String     @unique
+  role            UserRole   @default(USER)
+  status          UserStatus @default(ACTIVE)
+  emailVerifiedAt DateTime?
+
+  posts           Post[]
+  comments        Comment[]
+  reservations    Reservation[]
+
+  assignments          PostAssignment[] @relation("OperatorAssignments")
+  createdAssignments   PostAssignment[] @relation("AssignmentCreator")
+
+  mentionsReceived Mention[] @relation("MentionsReceived")
+  mentionsSent     Mention[] @relation("MentionsSent")
+
+  notifications        Notification[] @relation("NotificationRecipient")
+  notificationsActed   Notification[] @relation("NotificationActor")
+
+  pushSubscriptions PushSubscription[]
+
+  reportsFiled    Report[] @relation("ReportsFiled")
+  auditLogs       AuditLog[] @relation("AuditActor")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Equipment {
+  id           String  @id @default(uuid())
+  name         String  @unique
+  slug         String  @unique
+  isActive     Boolean @default(true)
+  manual       String? // 사용 메뉴얼 (마크다운 또는 HTML)
+  manualImages Json?   // 메뉴얼 이미지 데이터 배열 (Base64)
+
+  posts     Post[]
+  reservations Reservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Reservation {
+  id          String           @id @default(uuid())
+  equipmentId String
+  userId      String
+  status      ReservationStatus @default(PENDING)
+
+  startAt     DateTime
+  endAt       DateTime
+  note        String?
+
+  cancelledAt DateTime?
+
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([equipmentId, startAt])
+  @@index([equipmentId, endAt])
+  @@index([equipmentId, status])
+  @@index([userId, startAt])
+}
+
+model Post {
+  id          String     @id @default(uuid())
+  title       String
+  body        String
+  imageUrls   Json?      // 이미지 URL 배열 (Base64 또는 외부 URL)
+  authorId    String
+  equipmentId String
+  status      PostStatus @default(OPEN)
+
+  author      User      @relation(fields: [authorId], references: [id])
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+
+  comments    Comment[]
+  assignments PostAssignment[]
+  mentions    Mention[]
+  notifications Notification[]
+
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([equipmentId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  postId    String
+  authorId  String
+  body      String
+
+  post      Post     @relation(fields: [postId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
+
+  notifications Notification[]
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+model PostAssignment {
+  id          String   @id @default(uuid())
+  postId      String
+  operatorId  String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  post        Post @relation(fields: [postId], references: [id])
+  operator    User @relation("OperatorAssignments", fields: [operatorId], references: [id])
+  createdBy   User @relation("AssignmentCreator", fields: [createdById], references: [id])
+
+  @@unique([postId, operatorId])
+  @@index([operatorId, createdAt])
+  @@index([postId])
+}
+
+model Mention {
+  id              String            @id @default(uuid())
+  targetType      MentionTargetType
+  targetId        String
+  postId          String
+  mentionedUserId String
+  mentionedById   String
+  createdAt       DateTime @default(now())
+
+  post            Post @relation(fields: [postId], references: [id])
+
+  mentionedUser   User @relation("MentionsReceived", fields: [mentionedUserId], references: [id])
+  mentionedBy     User @relation("MentionsSent", fields: [mentionedById], references: [id])
+
+  @@unique([targetType, targetId, mentionedUserId])
+  @@index([mentionedUserId, createdAt])
+  @@index([postId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  actorId   String?
+  postId    String?
+  commentId String?
+
+  title     String
+  body      String
+  linkUrl   String
+
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  dedupKey  String?          @unique
+
+  recipient User             @relation("NotificationRecipient", fields: [userId], references: [id])
+  actor     User?            @relation("NotificationActor", fields: [actorId], references: [id])
+  post      Post?            @relation(fields: [postId], references: [id])
+  comment   Comment?         @relation(fields: [commentId], references: [id])
+
+  @@index([userId, isRead, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Report {
+  id         String           @id @default(uuid())
+  reporterId String
+  targetType ReportTargetType
+  targetId   String
+  reason     ReportReason
+  detail     String?
+  status     ReportStatus     @default(OPEN)
+  adminNote  String?
+
+  reporter   User             @relation("ReportsFiled", fields: [reporterId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([status, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  actor      User? @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([action, createdAt])
+  @@index([actorId, createdAt])
+}
+
