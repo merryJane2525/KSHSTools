@@ -14,6 +14,8 @@ const LIMIT_EQUIPMENT = 2;
 const LIMIT_MANUAL = 2;
 const LIMIT_QA = 4;
 
+type ScoredDoc = SearchDocument & { score: number };
+
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim().slice(0, 100) ?? "";
   if (q.length < 2) {
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
     return { ...doc, score };
   });
 
-  scored.sort((a, b) => b.score - a.score);
+  scored.sort((a: ScoredDoc, b: ScoredDoc) => b.score - a.score);
 
   const byType = { equipment: [] as typeof scored, manual: [] as typeof scored, qa: [] as typeof scored };
   for (const doc of scored) {

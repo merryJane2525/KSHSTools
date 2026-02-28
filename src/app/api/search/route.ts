@@ -13,6 +13,7 @@ const LIMIT = 20;
 const MAX_SNIPPET = 120;
 
 type DocType = "equipment" | "manual" | "qa";
+type ScoredDoc = SearchDocument & { score: number };
 
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim().slice(0, 100) ?? "";
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
     return { ...doc, score };
   });
 
-  scored.sort((a, b) => b.score - a.score);
+  scored.sort((a: ScoredDoc, b: ScoredDoc) => b.score - a.score);
   const total = scored.length;
   const start = (page - 1) * limit;
   const pageDocs = scored.slice(start, start + limit);
