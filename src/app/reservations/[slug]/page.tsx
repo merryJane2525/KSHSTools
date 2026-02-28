@@ -11,6 +11,15 @@ type PageProps = {
   searchParams?: Promise<{ reservation_success?: string; reservation_error?: string }> | { reservation_success?: string; reservation_error?: string };
 };
 
+type ReservationRow = {
+  id: string;
+  status: "PENDING" | "APPROVED";
+  startAt: Date;
+  endAt: Date;
+  title: string | null;
+  user: { username: string };
+};
+
 export default async function ReservationDetailPage({ params, searchParams }: PageProps) {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
@@ -49,7 +58,7 @@ export default async function ReservationDetailPage({ params, searchParams }: Pa
     },
   });
 
-  const reservationList = reservations.map((r) => ({
+  const reservationList = (reservations as ReservationRow[]).map((r) => ({
     id: r.id,
     status: r.status,
     startAtIso: r.startAt.toISOString(),
