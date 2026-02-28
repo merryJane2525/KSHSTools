@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate, formatDateTime } from "@/lib/date";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
+import { WeekTimetable } from "./WeekTimetable";
 
 type WorkLogRow = {
   id: string;
@@ -112,6 +113,29 @@ export default async function OperatorWorkPage({
       (w.status === "SCHEDULED" || w.status === "COMPLETED")
   );
 
+  const weekStartYmd =
+    `${week.start.getFullYear()}-${String(week.start.getMonth() + 1).padStart(2, "0")}-${String(week.start.getDate()).padStart(2, "0")}`;
+
+  function getDayIndexForWeek(start: Date, d: Date): number {
+    const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return Math.round((t.getTime() - s.getTime()) / (24 * 60 * 60 * 1000));
+  }
+  function minutesFromMidnight(d: Date): number {
+    return d.getHours() * 60 + d.getMinutes();
+  }
+
+  const weekLogsForClient = weekLogs.map((w: WorkLogRow) => ({
+    id: w.id,
+    dayIndex: getDayIndexForWeek(week.start, w.startAt),
+    startMinutes: minutesFromMidnight(w.startAt),
+    endMinutes: minutesFromMidnight(w.endAt),
+    equipment: w.equipment,
+    user: w.user,
+    status: w.status,
+    workedMinutes: w.workedMinutes,
+  }));
+
   return (
     <div className="space-y-6">
       <AnimateOnScroll>
@@ -164,30 +188,43 @@ export default async function OperatorWorkPage({
           {weekLogs.length === 0 ? (
             <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">이번 주 예정된 근무가 없습니다.</p>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {weekLogs.map((w: WorkLogRow) => (
-                <li
-                  key={w.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-100 dark:border-zinc-700 px-4 py-3 text-sm"
-                >
-                  <div className="font-medium text-zinc-900 dark:text-zinc-100">{w.equipment.name}</div>
-                  <div className="text-zinc-600 dark:text-zinc-400">
-                    {formatDateTime(w.startAt)} ~ {formatDateTime(w.endAt)}
-                  </div>
-                  <div className="text-zinc-500 dark:text-zinc-400">@{w.user.username}</div>
-                  <span className="rounded-full bg-zinc-100 dark:bg-zinc-700 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                    {statusLabel[w.status] ?? w.status}
-                  </span>
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">{w.workedMinutes}분</span>
-                  <Link
-                    href={`/reservations/${w.equipment.slug}`}
-                    className="text-blue-600 dark:text-blue-400 hover:underline text-xs"
-                  >
-                    예약 보기
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <>
+              <WeekTimetable
+                weekStart={weekStartYmd}
+                weekLogs={weekLogsForClient}
+                statusLabel={statusLabel}
+              />
+              <details className="mt-4 group">
+                <summary className="cursor-pointer text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 list-none flex items-center gap-1">
+                  <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                  리스트로 보기
+                </summary>
+                <ul className="mt-2 space-y-2 pl-4">
+                  {weekLogs.map((w: WorkLogRow) => (
+                    <li
+                      key={w.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-100 dark:border-zinc-700 px-4 py-3 text-sm"
+                    >
+                      <div className="font-medium text-zinc-900 dark:text-zinc-100">{w.equipment.name}</div>
+                      <div className="text-zinc-600 dark:text-zinc-400">
+                        {formatDateTime(w.startAt)} ~ {formatDateTime(w.endAt)}
+                      </div>
+                      <div className="text-zinc-500 dark:text-zinc-400">@{w.user.username}</div>
+                      <span className="rounded-full bg-zinc-100 dark:bg-zinc-700 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                        {statusLabel[w.status] ?? w.status}
+                      </span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400">{w.workedMinutes}분</span>
+                      <Link
+                        href={`/reservations/${w.equipment.slug}`}
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-xs"
+                      >
+                        예약 보기
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </>
           )}
         </section>
       </AnimateOnScroll>

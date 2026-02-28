@@ -23,7 +23,6 @@ type EquipmentListItem = {
   id: string;
   name: string;
   slug: string;
-  _count: { posts: number };
 };
 
 export default async function EquipmentsPage() {
@@ -36,12 +35,24 @@ export default async function EquipmentsPage() {
 
   let equipments: EquipmentListItem[] = [];
   let loadError: string | null = null;
+  let postCountByEquipment: Record<string, number> = {};
   try {
-    equipments = await prisma.equipment.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, slug: true, _count: { select: { posts: true } } },
-    });
+    const [equipmentList, countRows] = await Promise.all([
+      prisma.equipment.findMany({
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, slug: true },
+      }),
+      prisma.post.groupBy({
+        by: ["equipmentId"],
+        where: { deletedAt: null },
+        _count: { id: true },
+      }),
+    ]);
+    equipments = equipmentList;
+    for (const row of countRows) {
+      postCountByEquipment[row.equipmentId] = row._count.id;
+    }
   } catch {
     loadError = "목록을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
   }
@@ -87,7 +98,7 @@ export default async function EquipmentsPage() {
             <Link href={`/equipments/${eq.slug}/manual`} className="block">
               <div className="flex items-center justify-between gap-4">
                 <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">{eq.name}</div>
-                <div className="text-sm text-zinc-500 dark:text-zinc-400">{eq._count.posts}개 질문</div>
+                <div className="text-sm text-zinc-500 dark:text-zinc-400">{postCountByEquipment[eq.id] ?? 0}개 질문</div>
               </div>
               <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">/{eq.slug}</div>
             </Link>

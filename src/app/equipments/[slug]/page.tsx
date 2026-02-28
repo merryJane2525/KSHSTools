@@ -71,22 +71,25 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
       isActive: true,
       createdAt: true,
       updatedAt: true,
-      _count: { select: { posts: true } },
     },
   });
   if (!equipment || !equipment.isActive) notFound();
 
-  // 최근 게시글 5개만 미리보기용으로 가져오기 (전체는 커뮤니티에서 확인)
-  const recentPosts: RecentPostItem[] = await prisma.post.findMany({
-    where: { equipmentId: equipment.id, deletedAt: null },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-    select: {
-      id: true,
-      title: true,
-      createdAt: true,
-    },
-  });
+  const [postCount, recentPosts] = await Promise.all([
+    prisma.post.count({ where: { equipmentId: equipment.id, deletedAt: null } }),
+    prisma.post.findMany({
+      where: { equipmentId: equipment.id, deletedAt: null },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+      },
+    }),
+  ]);
+
+  const recentPostsTyped = recentPosts as RecentPostItem[];
 
   const weekStartDate = new Date(weekStart + "T00:00:00+09:00");
   const weekEndDate = new Date(weekStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -175,7 +178,7 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">관련 질문 수</div>
-                <div className="mt-1 text-2xl font-bold text-zinc-900">{equipment._count.posts}개</div>
+                <div className="mt-1 text-2xl font-bold text-zinc-900">{postCount}개</div>
               </div>
               <Link
                 href={`/community?equipmentId=${equipment.id}`}
@@ -199,7 +202,7 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
       </AnimateOnScroll>
 
       {/* 최근 질문 미리보기 */}
-      {recentPosts.length > 0 && (
+      {recentPostsTyped.length > 0 && (
         <AnimateOnScroll>
           <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
@@ -212,7 +215,7 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
             </Link>
           </div>
           <div className="space-y-2">
-            {recentPosts.map((post) => (
+            {recentPostsTyped.map((post: RecentPostItem) => (
               <Link
                 key={post.id}
                 href={`/posts/${post.id}`}
