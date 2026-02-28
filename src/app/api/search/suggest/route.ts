@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import type { SearchDocument } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import {
   tokenizeQuery,
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     take: 50,
   });
 
-  const scored = all.map((doc) => {
+  const scored = all.map((doc: SearchDocument) => {
     const titleLower = doc.title.toLowerCase();
     const contentLower = doc.content.toLowerCase();
     let score = 0;
