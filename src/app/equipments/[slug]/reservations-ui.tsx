@@ -102,6 +102,7 @@ export function ReservationsPanel({
             {reservationError === "MIN_10MIN" && "예약은 최소 10분 이상이어야 합니다."}
             {reservationError === "TOO_LONG" && "예약 시간은 최대 8시간까지 가능합니다."}
             {reservationError === "PAST_TIME" && "과거 시간으로는 예약할 수 없습니다."}
+            {reservationError === "TOO_FAR" && "예약은 현재 시각 기준 30일 이내만 가능합니다."}
             {reservationError === "INVALID_EQUIPMENT" && "기자재가 올바르지 않습니다."}
             {reservationError === "EQUIPMENT_CONFLICT" && "해당 시간대에 이미 다른 예약이 있습니다."}
             {reservationError === "USER_CONFLICT" && "같은 시간대에 내 다른 예약이 이미 있습니다."}

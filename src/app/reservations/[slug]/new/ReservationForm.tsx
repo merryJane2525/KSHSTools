@@ -42,9 +42,13 @@ export function ReservationForm({
   defaultStudentNumber: string;
   defaultDate: string;
 }) {
-  const minDate = useMemo(() => {
+  const { minDate, maxDate } = useMemo(() => {
     const d = new Date();
-    return d.toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
+    const min = d.toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
+    const maxD = new Date(d);
+    maxD.setDate(maxD.getDate() + 30);
+    const max = maxD.toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
+    return { minDate: min, maxDate: max };
   }, []);
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -138,6 +142,7 @@ export function ReservationForm({
               name="date"
               defaultValue={defaultDate}
               min={minDate}
+              max={maxDate}
               required
               className="mt-1 w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-primary focus:ring-1 focus:ring-primary/20 dark:border-primary/20 dark:bg-primary/5"
             />
@@ -173,7 +178,7 @@ export function ReservationForm({
         </div>
 
         <p className="mt-2 text-xs text-primary/60">
-          예약 시간은 10분 단위로 선택할 수 있습니다. 예약 후 오퍼레이터 승인이 필요합니다.
+          예약 시간은 10분 단위로 선택할 수 있으며, 현재 시각 기준 30일 이내만 예약 가능합니다. 예약 후 오퍼레이터 승인이 필요합니다.
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">

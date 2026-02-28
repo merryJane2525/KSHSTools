@@ -62,6 +62,11 @@ export async function createReservationAction(_: unknown, formData: FormData) {
   const now = Date.now();
   if (startAt.getTime() < now - 60_000) return { ok: false as const, error: "PAST_TIME" as const };
 
+  // 30일 이내 예약만 허용 (무분별한 장비 예약 방지)
+  const MAX_DAYS_AHEAD = 30;
+  const maxStartMs = now + MAX_DAYS_AHEAD * 24 * 60 * 60 * 1000;
+  if (startAt.getTime() > maxStartMs) return { ok: false as const, error: "TOO_FAR" as const };
+
   const equipment = await prisma.equipment.findUnique({
     where: { id: parsed.data.equipmentId },
     select: { id: true, slug: true, isActive: true },
