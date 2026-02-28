@@ -9,8 +9,8 @@ export async function Header() {
 
   return (
     <header className="relative z-50 border-b border-primary/10 bg-white/90 dark:bg-[#15191d]/90 dark:border-primary/20 backdrop-blur-sm">
-      <div className="mx-auto flex w-full max-w-5xl flex-nowrap items-center justify-between gap-4 overflow-x-auto px-6 py-4">
-        <div className="flex min-w-0 flex-shrink-0 flex-nowrap items-center gap-4">
+      <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-4 sm:max-w-6xl sm:px-6 lg:max-w-7xl lg:flex-nowrap lg:px-8">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 lg:flex-nowrap lg:gap-4">
           <Link href="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-bold tracking-tight text-primary hover:opacity-90 transition-opacity">
             <Image
               src="/favicon.ico"
@@ -21,7 +21,7 @@ export async function Header() {
             />
             <span>KSHS 심화기자재</span>
           </Link>
-          <nav className="flex flex-nowrap items-center gap-1 text-sm">
+          <nav className="flex flex-wrap items-center gap-x-0 gap-y-1 sm:gap-x-1 lg:flex-nowrap lg:gap-1">
             <Link className="whitespace-nowrap rounded-lg px-3 py-2 text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors" href="/community">
               커뮤니티
             </Link>
@@ -59,7 +59,7 @@ export async function Header() {
           </nav>
         </div>
 
-        <div className="flex shrink-0 flex-nowrap items-center gap-3 whitespace-nowrap text-sm">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 lg:flex-nowrap text-sm">
           <ThemeToggle />
           {user ? (
             <>

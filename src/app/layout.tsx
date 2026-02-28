@@ -121,7 +121,7 @@ export default function RootLayout({
         <ThemeProvider>
           <div className="min-h-dvh bg-background text-foreground overflow-x-hidden">
             <Header />
-            <main className="mx-auto w-full max-w-5xl px-6 py-8">{children}</main>
+            <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:max-w-6xl sm:px-6 lg:max-w-7xl lg:px-8">{children}</main>
           </div>
         </ThemeProvider>
       </body>
