@@ -32,6 +32,9 @@ type OperatorMentionItem = {
   };
 };
 
+/** findMany select 결과 (targetId 포함, 필터/매핑용) */
+type MentionRowForFilter = OperatorMentionItem & { targetId: string };
+
 export default async function OperatorInboxPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
@@ -61,7 +64,7 @@ export default async function OperatorInboxPage() {
   });
 
   // 나를 멘션한 최근 포스트들 (원본 게시글·댓글이 삭제된 스레드는 제외)
-  const mentionsRaw = await prisma.mention.findMany({
+  const mentionsRaw = (await prisma.mention.findMany({
     where: {
       mentionedUserId: me.id,
       post: { deletedAt: null },
@@ -84,7 +87,7 @@ export default async function OperatorInboxPage() {
         },
       },
     },
-  });
+  })) as MentionRowForFilter[];
 
   // 댓글 멘션은 원본 댓글이 삭제되지 않은 것만 표시
   const commentTargetIds = mentionsRaw.filter((m) => m.targetType === "COMMENT").map((m) => m.targetId);
