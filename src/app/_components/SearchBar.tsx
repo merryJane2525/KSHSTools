@@ -145,26 +145,36 @@ export function SearchBar({ expandable = false }: SearchBarProps) {
     }, 180);
   }, [expandable]);
 
+  // 버튼이 포커스를 받지 않도록 mousedown에서 preventDefault → 클릭 시 input blur 이중 발생 방지
+  const handleIconMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (expanded) return;
+    setExpanded(true);
+    setOpen(true);
+    ignoreBlurUntilRef.current = Date.now() + 400;
+  }, [expanded]);
+
   const handleIconClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (expanded) {
-      inputRef.current?.focus();
-      return;
-    }
-    setExpanded(true);
-    setOpen(true);
-    ignoreBlurUntilRef.current = Date.now() + 250;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => inputRef.current?.focus());
-    });
+    if (expanded) inputRef.current?.focus();
   }, [expanded]);
+
+  // 열린 직후 input 포커스 (DOM 반영 후 실행되도록)
+  useEffect(() => {
+    if (!expandable || !expanded) return;
+    const t = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 50);
+    return () => clearTimeout(t);
+  }, [expandable, expanded]);
 
   if (expandable) {
     return (
       <div ref={containerRef} className="relative flex items-center shrink-0">
         <button
           type="button"
+          onMouseDown={handleIconMouseDown}
           onClick={handleIconClick}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary/70 hover:bg-primary/10 hover:text-primary transition-colors"
           aria-label="검색 열기 (Ctrl+K)"

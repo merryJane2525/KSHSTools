@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { processManualContent } from "@/lib/markdown";
@@ -50,6 +50,7 @@ export async function createEquipmentAction(_: unknown, formData: FormData) {
     await syncEquipmentSearchDocumentById(createdId).catch(() => {});
   }
   revalidatePath("/equipments");
+  revalidateTag("equipments");
   return { ok: true as const };
 }
 

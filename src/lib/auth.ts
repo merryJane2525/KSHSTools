@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
@@ -73,7 +74,8 @@ export async function getSessionFromCookies(): Promise<SessionPayload | null> {
   }
 }
 
-export async function getCurrentUser() {
+/** 동일 요청 내에서 한 번만 DB 조회하도록 캐시 (Header·페이지 등 다중 호출 시 속도 개선) */
+export const getCurrentUser = cache(async () => {
   try {
     const session = await getSessionFromCookies();
     if (!session) return null;
@@ -88,7 +90,7 @@ export async function getCurrentUser() {
   } catch {
     return null;
   }
-}
+});
 
 export async function requireUser() {
   const user = await getCurrentUser();

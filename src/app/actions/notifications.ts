@@ -23,3 +23,14 @@ export async function markNotificationReadAction(formData: FormData) {
   return;
 }
 
+/** 현재 사용자의 알림 기록 전체 삭제 */
+export async function clearAllNotificationsAction() {
+  const me = await requireUser();
+
+  await prisma.notification.deleteMany({
+    where: { userId: me.id },
+  });
+
+  revalidatePath("/notifications");
+}
+

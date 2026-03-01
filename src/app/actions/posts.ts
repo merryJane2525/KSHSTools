@@ -246,6 +246,11 @@ export async function deletePostAction(_: unknown, formData: FormData) {
     data: { deletedAt: new Date() },
   });
 
+  // 해당 스레드(게시글)에 연동된 멘션 기록 제거 → 오퍼레이터 탭에서 사라지도록
+  await prisma.mention.deleteMany({ where: { postId: parsed.data.postId } }).catch(() => {});
+
+  // 참고: 댓글 삭제 시에는 prisma.mention.deleteMany({ where: { targetType: "COMMENT", targetId: commentId } }) 호출
+
   await syncPostSearchDocumentById(parsed.data.postId).catch(() => {});
   revalidatePath("/community");
   revalidatePath(`/posts/${parsed.data.postId}`);

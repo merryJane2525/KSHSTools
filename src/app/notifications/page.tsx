@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/date";
-import { markNotificationReadAction } from "@/app/actions/notifications";
+import { markNotificationReadAction, clearAllNotificationsAction } from "@/app/actions/notifications";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 import { PushEnable } from "./PushEnable";
+import { ClearNotificationsButton } from "./ClearNotificationsButton";
 
 type NotificationItem = {
   id: string;
@@ -53,6 +54,11 @@ export default async function NotificationsPage() {
 
       <AnimateOnScroll>
         <div className="space-y-3">
+        {notifications.length > 0 ? (
+          <div className="flex justify-end">
+            <ClearNotificationsButton clearAction={clearAllNotificationsAction} />
+          </div>
+        ) : null}
         {notifications.length === 0 ? (
           <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 text-sm text-zinc-600 dark:text-zinc-400">
             아직 알림이 없습니다.

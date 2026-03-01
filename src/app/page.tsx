@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { EquipmentTable } from "./_components/EquipmentTable";
 import { FeaturedEquipments } from "./_components/FeaturedEquipments";
@@ -23,14 +24,20 @@ export const metadata: Metadata = {
   keywords: seoKeywords,
 };
 
-export default async function Home() {
-  // 데이터베이스에서 기자재 목록 가져오기 (표에서 링크 제공용)
-  const equipments = (await prisma.equipment.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true, slug: true },
-  })) as EquipmentSlugItem[];
+// 홈 기자재 목록 캐시 (60초) — DB 부하·응답 속도 개선
+const getCachedEquipments = unstable_cache(
+  async () => {
+    return prisma.equipment.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, slug: true },
+    });
+  },
+  ["home-equipments"],
+  { revalidate: 60, tags: ["equipments"] }
+);
 
-  // 기자재 이름으로 slug 매핑 생성
+export default async function Home() {
+  const equipments = (await getCachedEquipments()) as EquipmentSlugItem[];
   const equipmentSlugMap = new Map(
     equipments.map((eq: EquipmentSlugItem) => [eq.name.toLowerCase(), eq.slug])
   );
@@ -53,6 +60,7 @@ export default async function Home() {
               title="배경 영상"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              loading="lazy"
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full w-[max(100vw,177.78vh)] h-[max(56.25vw,100vh)] pointer-events-none"
               style={{ border: 0 }}
             />

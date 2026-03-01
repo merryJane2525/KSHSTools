@@ -60,15 +60,19 @@ export default async function OperatorInboxPage() {
     },
   });
 
-  // 나를 멘션한 최근 포스트들
-  const mentions: OperatorMentionItem[] = await prisma.mention.findMany({
-    where: { mentionedUserId: me.id },
+  // 나를 멘션한 최근 포스트들 (원본 게시글·댓글이 삭제된 스레드는 제외)
+  const mentionsRaw = await prisma.mention.findMany({
+    where: {
+      mentionedUserId: me.id,
+      post: { deletedAt: null },
+    },
     orderBy: { createdAt: "desc" },
-    take: 20,
+    take: 25,
     select: {
       id: true,
       createdAt: true,
       targetType: true,
+      targetId: true,
       post: {
         select: {
           id: true,
@@ -81,6 +85,24 @@ export default async function OperatorInboxPage() {
       },
     },
   });
+
+  // 댓글 멘션은 원본 댓글이 삭제되지 않은 것만 표시
+  const commentTargetIds = mentionsRaw.filter((m) => m.targetType === "COMMENT").map((m) => m.targetId);
+  const existingCommentIds = new Set<string>(
+    commentTargetIds.length > 0
+      ? (await prisma.comment.findMany({
+          where: { id: { in: commentTargetIds }, deletedAt: null },
+          select: { id: true },
+        })).map((c) => c.id)
+      : []
+  );
+
+  const mentions: OperatorMentionItem[] = mentionsRaw
+    .filter(
+      (m) => m.targetType === "POST" || (m.targetType === "COMMENT" && existingCommentIds.has(m.targetId))
+    )
+    .slice(0, 20)
+    .map(({ targetId: _t, ...rest }) => rest);
 
   const assignedCount = assignments.length;
   const mentionCount = mentions.length;
