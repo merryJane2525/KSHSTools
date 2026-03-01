@@ -117,7 +117,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
             const operatorOverlapWhere = {
               operatorId,
               cancelledAt: null,
-              operatorStatus: { in: ["REQUESTED", "APPROVED"] as const },
+              operatorStatus: { in: ["REQUESTED", "APPROVED"] },
               startAt: { lt: endAt },
               endAt: { gt: startAt },
             };
