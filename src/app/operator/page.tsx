@@ -91,12 +91,13 @@ export default async function OperatorInboxPage() {
 
   // 댓글 멘션은 원본 댓글이 삭제되지 않은 것만 표시
   const commentTargetIds = mentionsRaw.filter((m) => m.targetType === "COMMENT").map((m) => m.targetId);
+  type CommentIdRow = { id: string };
   const existingCommentIds = new Set<string>(
     commentTargetIds.length > 0
       ? (await prisma.comment.findMany({
           where: { id: { in: commentTargetIds }, deletedAt: null },
           select: { id: true },
-        })).map((c) => c.id)
+        })).map((c: CommentIdRow) => c.id)
       : []
   );
 
