@@ -3,9 +3,15 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, UserRole, OperatorStatus, ReservationStatus, OperatorWorkLogStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+
+/** Prisma enum 필터용 mutable 배열 (readonly 할당 오류 방지) */
+const ROLES_OPERATOR_OR_ADMIN: UserRole[] = ["OPERATOR", "ADMIN"];
+const OPERATOR_STATUS_REQUESTED_OR_APPROVED: OperatorStatus[] = ["REQUESTED", "APPROVED"];
+const RESERVATION_STATUS_PENDING_OR_APPROVED: ReservationStatus[] = ["PENDING", "APPROVED"];
+const WORKLOG_STATUS_SCHEDULED_OR_COMPLETED: OperatorWorkLogStatus[] = ["SCHEDULED", "COMPLETED"];
 
 /** 트랜잭션 콜백에서 사용하는 클라이언트 타입 ($ 메서드 제외) */
 type TxClient = Omit<
@@ -78,7 +84,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
   let operatorId: string | null = null;
   if (parsed.data.operatorId) {
     const operator = await prisma.user.findFirst({
-      where: { id: parsed.data.operatorId, status: "ACTIVE", role: { in: ["OPERATOR", "ADMIN"] } },
+      where: { id: parsed.data.operatorId, status: "ACTIVE", role: { in: ROLES_OPERATOR_OR_ADMIN } },
       select: { id: true },
     });
     if (!operator) return { ok: false as const, error: "INVALID_OPERATOR" as const };
@@ -117,7 +123,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
             const operatorOverlapWhere = {
               operatorId,
               cancelledAt: null,
-              operatorStatus: { in: ["REQUESTED", "APPROVED"] },
+              operatorStatus: { in: OPERATOR_STATUS_REQUESTED_OR_APPROVED },
               startAt: { lt: endAt },
               endAt: { gt: startAt },
             };
@@ -329,8 +335,8 @@ export async function approveReservationAction(_: unknown, formData: FormData) {
       operatorId,
       id: { not: reservation.id },
       cancelledAt: null,
-      operatorStatus: { in: ["REQUESTED", "APPROVED"] },
-      status: { in: ["PENDING", "APPROVED"] },
+      operatorStatus: { in: OPERATOR_STATUS_REQUESTED_OR_APPROVED },
+      status: { in: RESERVATION_STATUS_PENDING_OR_APPROVED },
       startAt: { lt: overlapEnd },
       endAt: { gt: overlapStart },
     },
@@ -341,7 +347,7 @@ export async function approveReservationAction(_: unknown, formData: FormData) {
   const operatorConflictWorkLog = await prisma.operatorWorkLog.findFirst({
     where: {
       operatorId,
-      status: { in: ["SCHEDULED", "COMPLETED"] },
+      status: { in: WORKLOG_STATUS_SCHEDULED_OR_COMPLETED },
       startAt: { lt: overlapEnd },
       endAt: { gt: overlapStart },
     },
