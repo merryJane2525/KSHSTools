@@ -23,6 +23,7 @@ function SignupSubmitButton() {
 function SignupForm() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
+  const returnUrl = searchParams.get("returnUrl");
 
   return (
     <div className="min-h-dvh bg-zinc-50 dark:bg-zinc-950">
@@ -42,6 +43,7 @@ function SignupForm() {
           ) : null}
 
           <form action={signupFormAction} className="mt-6 space-y-4">
+            {returnUrl ? <input type="hidden" name="returnUrl" value={returnUrl} /> : null}
             <label className="block">
               <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">이메일</span>
               <input
@@ -80,7 +82,13 @@ function SignupForm() {
           </form>
 
             <div className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-              이미 계정이 있나요? <Link className="font-medium text-zinc-900 dark:text-zinc-100 underline" href="/login">로그인</Link>
+              이미 계정이 있나요?{" "}
+              <Link
+                className="font-medium text-zinc-900 dark:text-zinc-100 underline"
+                href={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : "/login"}
+              >
+                로그인
+              </Link>
             </div>
           </div>
         </AnimateOnScroll>

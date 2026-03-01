@@ -23,12 +23,16 @@ export async function Header() {
             <span>KSHS 심화기자재</span>
           </Link>
           <nav className="flex min-w-0 flex-1 items-center gap-x-0 gap-y-1 sm:gap-x-1 lg:gap-1 lg:flex-nowrap lg:overflow-x-auto lg:overflow-y-hidden lg:shrink lg:[scrollbar-width:none] lg:[-ms-overflow-style:none] lg:[&::-webkit-scrollbar]:hidden">
-            <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/community">
-              커뮤니티
-            </Link>
-            <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/equipments">
-              기자재
-            </Link>
+            {user && (
+              <>
+                <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/community">
+                  커뮤니티
+                </Link>
+                <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/equipments">
+                  기자재
+                </Link>
+              </>
+            )}
             <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors lg:hidden sm:px-3" href="/search">
               검색
             </Link>
@@ -37,9 +41,11 @@ export async function Header() {
                 예약
               </Link>
             )}
-            <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/notifications">
-              알림
-            </Link>
+            {user && (
+              <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/notifications">
+                알림
+              </Link>
+            )}
             {user && (user.role === "OPERATOR" || user.role === "ADMIN") && (
               <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/operator">
                 오퍼레이터

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate } from "@/lib/date";
@@ -51,7 +51,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function EquipmentDetailPage({ params, searchParams }: PageProps) {
   const me = await getCurrentUser();
-  if (!me) redirect("/login");
 
   const resolvedParams = await Promise.resolve(params);
   const resolvedSearch = searchParams ? await Promise.resolve(searchParams) : {};
@@ -127,24 +126,35 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
             <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">/{equipment.slug}</div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link
-              className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
-              href={`/reservations/${equipment.slug}`}
-            >
-              예약하기
-            </Link>
+            {me ? (
+              <Link
+                className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
+                href={`/reservations/${equipment.slug}`}
+              >
+                예약하기
+              </Link>
+            ) : (
+              <Link
+                className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
+                href={`/login?returnUrl=${encodeURIComponent(`/reservations/${equipment.slug}`)}`}
+              >
+                예약하기 (로그인 필요)
+              </Link>
+            )}
             <Link
               className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
               href={`/equipments/${equipment.slug}/manual`}
             >
               사용 메뉴얼
             </Link>
-            <Link
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90"
-              href={`/posts/new?equipmentId=${equipment.id}`}
-            >
-              질문 작성하기
-            </Link>
+            {me && (
+              <Link
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90"
+                href={`/posts/new?equipmentId=${equipment.id}`}
+              >
+                질문 작성하기
+              </Link>
+            )}
           </div>
         </div>
       </AnimateOnScroll>
@@ -192,13 +202,19 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
       </div>
       </AnimateOnScroll>
 
-      {/* 예약 현황: 타임테이블만 표시 (예약 신청은 예약 탭에서) */}
+      {/* 이번 주 가용 시간 (읽기 전용): 빈 칸 = 예약 가능 */}
       <AnimateOnScroll>
-        <WeekCalendarView
-          equipmentSlug={equipment.slug}
-          weekStart={weekStart}
-          reservations={calendarItems}
-        />
+        <section>
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">이번 주 가용 시간</h2>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">읽기 전용 · 색 칸 = 예약됨, 빈 칸 = 예약 가능</p>
+          <div className="mt-4">
+            <WeekCalendarView
+              equipmentSlug={equipment.slug}
+              weekStart={weekStart}
+              reservations={calendarItems}
+            />
+          </div>
+        </section>
       </AnimateOnScroll>
 
       {/* 최근 질문 미리보기 */}

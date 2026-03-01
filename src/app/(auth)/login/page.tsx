@@ -23,6 +23,7 @@ function LoginSubmitButton() {
 function LoginForm() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
+  const returnUrl = searchParams.get("returnUrl");
 
   return (
     <div className="min-h-dvh bg-zinc-50 dark:bg-zinc-950">
@@ -30,7 +31,9 @@ function LoginForm() {
         <AnimateOnScroll>
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">로그인</h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">이메일 또는 username으로 로그인합니다.</p>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              {returnUrl ? "해당 콘텐츠를 보려면 로그인하거나 회원가입해 주세요." : "이메일 또는 username으로 로그인합니다."}
+            </p>
 
           {error ? (
             <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
@@ -41,6 +44,7 @@ function LoginForm() {
           ) : null}
 
           <form action={loginFormAction} className="mt-6 space-y-4">
+            {returnUrl ? <input type="hidden" name="returnUrl" value={returnUrl} /> : null}
             <label className="block">
               <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">이메일 또는 username</span>
               <input
@@ -66,7 +70,13 @@ function LoginForm() {
           </form>
 
             <div className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-              계정이 없나요? <Link className="font-medium text-zinc-900 dark:text-zinc-100 underline" href="/signup">회원가입</Link>
+              계정이 없나요?{" "}
+              <Link
+                className="font-medium text-zinc-900 dark:text-zinc-100 underline"
+                href={returnUrl ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}` : "/signup"}
+              >
+                회원가입
+              </Link>
             </div>
           </div>
         </AnimateOnScroll>

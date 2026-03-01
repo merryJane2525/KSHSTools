@@ -4,6 +4,11 @@ import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kshstools.co.kr";
 
+/** 오퍼레이터 명단: 00기 학생이름 | 기자재 이름 오퍼레이터 | 이메일 (추후 상세 업데이트) */
+const OPERATOR_LIST: { generation: string; studentName: string; equipmentName: string; email: string }[] = [
+  { generation: "32", studentName: "원재인", equipmentName: "커뮤니티·리드", email: "zaixiang0001@gmail.com" },
+];
+
 const seoKeywords = [
   "강원과학고", "강원과학고등학교", "강원과학고 심화기자재", "강원과학고등학교 심화기자재",
   "KSHS", "KSHS 심화기자재", "강원과학고 오퍼레이터", "강원과학고 원재인", "KSHS 원재인", "32기 원재인",
@@ -55,15 +60,25 @@ export default function AboutPage() {
       <AnimateOnScroll>
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-5 text-sm text-zinc-600 dark:text-zinc-400">
           <div className="font-semibold text-zinc-800 dark:text-zinc-200">KSHS 심화기자재 운영</div>
-          <div className="mt-2">
-            32기 원재인 | 커뮤니티 관리자, 리드 엔지니어 |{" "}
-            <a
-              href="mailto:zaixiang0001@gmail.com"
-              className="text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              zaixiang0001@gmail.com
-            </a>
-          </div>
+
+          {/* 오퍼레이터 명단: 00기 학생이름 | 기자재 이름 오퍼레이터 | 이메일 (추후 상세 업데이트) */}
+          <div className="mt-3 font-medium text-zinc-700 dark:text-zinc-300">오퍼레이터 명단</div>
+          <ul className="mt-2 space-y-1.5">
+            {OPERATOR_LIST.map((op) => (
+              <li key={`${op.generation}-${op.studentName}-${op.equipmentName}`}>
+                <span>{op.generation}기 {op.studentName}</span>
+                <span className="mx-1.5 text-zinc-400 dark:text-zinc-500">|</span>
+                <span>{op.equipmentName} 오퍼레이터</span>
+                <span className="mx-1.5 text-zinc-400 dark:text-zinc-500">|</span>
+                <a
+                  href={`mailto:${op.email}`}
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {op.email}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </AnimateOnScroll>
 

@@ -40,7 +40,12 @@ export async function signupAction(_: unknown, formData: FormData) {
   });
 
   await setSessionCookie(user.id, user.role);
-  redirect("/equipments");
+
+  const returnUrl = formData.get("returnUrl");
+  const path = typeof returnUrl === "string" && returnUrl.startsWith("/") && !returnUrl.startsWith("//")
+    ? returnUrl
+    : "/equipments";
+  redirect(path);
 }
 
 
@@ -67,19 +72,36 @@ export async function loginAction(_: unknown, formData: FormData) {
   if (!ok) return { ok: false as const, error: "INVALID_CREDENTIALS" as const };
 
   await setSessionCookie(user.id, user.role);
-  redirect("/equipments");
+
+  const returnUrl = formData.get("returnUrl");
+  const path = typeof returnUrl === "string" && returnUrl.startsWith("/") && !returnUrl.startsWith("//")
+    ? returnUrl
+    : "/equipments";
+  redirect(path);
 }
 
 /** Form 전용: (formData)만 받아서 에러 시 redirect. Client에서 useActionState 대신 사용 */
 export async function loginFormAction(formData: FormData) {
   const result = await loginAction(null, formData);
-  if (!result.ok) redirect(`/login?error=${encodeURIComponent(result.error)}`);
+  if (!result.ok) {
+    const returnUrl = formData.get("returnUrl");
+    const q = typeof returnUrl === "string" && returnUrl.startsWith("/")
+      ? `&returnUrl=${encodeURIComponent(returnUrl)}`
+      : "";
+    redirect(`/login?error=${encodeURIComponent(result.error)}${q}`);
+  }
 }
 
 /** Form 전용: (formData)만 받아서 에러 시 redirect. Client에서 useActionState 대신 사용 */
 export async function signupFormAction(formData: FormData) {
   const result = await signupAction(null, formData);
-  if (!result.ok) redirect(`/signup?error=${encodeURIComponent(result.error)}`);
+  if (!result.ok) {
+    const returnUrl = formData.get("returnUrl");
+    const q = typeof returnUrl === "string" && returnUrl.startsWith("/")
+      ? `&returnUrl=${encodeURIComponent(returnUrl)}`
+      : "";
+    redirect(`/signup?error=${encodeURIComponent(result.error)}${q}`);
+  }
 }
 
 export async function logoutAction() {
