@@ -50,7 +50,7 @@ export async function createEquipmentAction(_: unknown, formData: FormData) {
     await syncEquipmentSearchDocumentById(createdId).catch(() => {});
   }
   revalidatePath("/equipments");
-  revalidateTag("equipments");
+  revalidateTag("equipments", "max");
   return { ok: true as const };
 }
 
