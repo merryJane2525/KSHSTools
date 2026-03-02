@@ -9,6 +9,8 @@ const OPERATOR_LIST: { generation: string; studentName: string; equipmentName: s
   { generation: "32", studentName: "원재인", equipmentName: "커뮤니티·리드", email: "zaixiang0001@gmail.com" },
 ];
 
+export const revalidate = 3600;
+
 const seoKeywords = [
   "강원과학고", "강원과학고등학교", "강원과학고 심화기자재", "강원과학고등학교 심화기자재",
   "KSHS", "KSHS 심화기자재", "강원과학고 오퍼레이터", "강원과학고 원재인", "KSHS 원재인", "32기 원재인",

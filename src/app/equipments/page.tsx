@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { CreateEquipmentForm } from "./ui";
@@ -38,16 +39,26 @@ export default async function EquipmentsPage() {
   let postCountByEquipment: Record<string, number> = {};
   try {
     const [equipmentList, countRows] = await Promise.all([
-      prisma.equipment.findMany({
-        where: { isActive: true },
-        orderBy: { name: "asc" },
-        select: { id: true, name: true, slug: true },
-      }),
-      prisma.post.groupBy({
-        by: ["equipmentId"],
-        where: { deletedAt: null },
-        _count: { id: true },
-      }),
+      unstable_cache(
+        async () =>
+          prisma.equipment.findMany({
+            where: { isActive: true },
+            orderBy: { name: "asc" },
+            select: { id: true, name: true, slug: true },
+          }),
+        ["equipments-list"],
+        { revalidate: 60, tags: ["equipments"] }
+      )(),
+      unstable_cache(
+        async () =>
+          prisma.post.groupBy({
+            by: ["equipmentId"],
+            where: { deletedAt: null },
+            _count: { id: true },
+          }),
+        ["equipments-post-counts"],
+        { revalidate: 60, tags: ["equipments", "posts"] }
+      )(),
     ]);
     equipments = equipmentList;
     for (const row of countRows) {

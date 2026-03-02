@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
@@ -15,11 +16,16 @@ export default async function ReservationsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
 
-  const equipments: EquipmentItem[] = await prisma.equipment.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true, description: true },
-  });
+  const equipments: EquipmentItem[] = await unstable_cache(
+    () =>
+      prisma.equipment.findMany({
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, slug: true, description: true },
+      }),
+    ["reservations-equipments"],
+    { revalidate: 60, tags: ["equipments"] }
+  )();
 
   return (
     <div className="space-y-6">

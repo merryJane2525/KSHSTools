@@ -1,10 +1,14 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import { EquipmentTable } from "./_components/EquipmentTable";
-import { FeaturedEquipments } from "./_components/FeaturedEquipments";
 import { AnimateOnScroll } from "./_components/AnimateOnScroll";
+
+const HomeBelowFold = dynamic(
+  () => import("./_components/HomeBelowFold").then((m) => ({ default: m.HomeBelowFold })),
+  { ssr: true }
+);
 
 type EquipmentSlugItem = {
   id: string;
@@ -94,28 +98,8 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* 일반 배경 섹션: 목록 + 대표 장비 (영상 아래) */}
-      <div className="space-y-12 py-12">
-        {/* 심화기자재 목록 — 스크롤 시 등장 */}
-        <AnimateOnScroll className="space-y-4 flex flex-col items-center">
-          <h2 className="text-2xl font-bold tracking-tight text-primary">
-            심화기자재 목록
-          </h2>
-          <div className="w-full max-w-2xl rounded-xl border border-primary/10 bg-white dark:bg-[#15191d] p-5 shadow-sm hover:border-primary/20 hover:shadow-md transition-all dark:border-primary/20">
-            <EquipmentTable equipmentSlugMap={equipmentSlugMap} />
-          </div>
-        </AnimateOnScroll>
-
-        {/* 대표 장비 섹션 — 스크롤 시 등장 */}
-        <AnimateOnScroll className="space-y-4">
-          <h2 className="text-2xl font-bold tracking-tight text-primary">
-            대표 장비
-          </h2>
-          <div className="rounded-xl border border-primary/10 bg-white dark:bg-[#15191d] p-5 shadow-sm hover:border-primary/20 hover:shadow-md transition-all dark:border-primary/20">
-            <FeaturedEquipments equipmentSlugMap={equipmentSlugMap} />
-          </div>
-        </AnimateOnScroll>
-      </div>
+      {/* 일반 배경 섹션: 목록 + 대표 장비 (영상 아래) — 별도 청크로 로드해 초기 JS 감소 */}
+      <HomeBelowFold equipmentSlugMap={equipmentSlugMap} />
     </>
   );
 }
