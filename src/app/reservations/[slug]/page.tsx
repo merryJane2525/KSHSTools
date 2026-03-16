@@ -19,6 +19,7 @@ type ReservationRow = {
   title: string | null;
   unitLabel: string | null;
   user: { username: string };
+  operator: { username: string } | null;
 };
 
 export default async function ReservationDetailPage({ params, searchParams }: PageProps) {
@@ -57,6 +58,7 @@ export default async function ReservationDetailPage({ params, searchParams }: Pa
       title: true,
       unitLabel: true,
       user: { select: { username: true } },
+      operator: { select: { username: true } },
     },
   });
 
@@ -68,6 +70,7 @@ export default async function ReservationDetailPage({ params, searchParams }: Pa
     username: r.user.username,
     title: r.title,
     unitLabel: r.unitLabel,
+    operatorUsername: r.operator?.username ?? null,
   }));
 
   const imagePath = `/equipments/${equipment.slug}.jpg`;

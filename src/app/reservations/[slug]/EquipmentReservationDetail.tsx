@@ -11,6 +11,7 @@ type ReservationForCalendar = {
   username: string;
   title: string | null;
   unitLabel?: string | null;
+  operatorUsername?: string | null;
 };
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -238,6 +239,7 @@ export function EquipmentReservationDetail({
                       <th className="py-2 text-left font-bold text-primary/70">사용자</th>
                       <th className="py-2 text-left font-bold text-primary/70">예약 제목</th>
                       <th className="py-2 text-left font-bold text-primary/70">예약 기간</th>
+                      <th className="py-2 text-left font-bold text-primary/70">오퍼레이터</th>
                       <th className="py-2 text-left font-bold text-primary/70">상태</th>
                     </tr>
                   </thead>
@@ -255,6 +257,9 @@ export function EquipmentReservationDetail({
                         </td>
                         <td className="py-2 text-primary/80">
                           {formatKstDate(r.startAtIso)} ~ {formatKstDate(r.endAtIso)}
+                        </td>
+                        <td className="py-2 text-primary/80">
+                          {r.operatorUsername ? `@${r.operatorUsername}` : "—"}
                         </td>
                         <td className="py-2">
                           <span
