@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/date";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 import { parseWeekParam } from "@/lib/week";
 import { WeekCalendarView } from "./WeekCalendarView";
+import { getEquipmentUnitConfig } from "@/lib/equipment-units";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kshstools.co.kr";
 
@@ -74,6 +75,8 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
   });
   if (!equipment || !equipment.isActive) notFound();
 
+  const unitConfig = getEquipmentUnitConfig(equipment.name);
+
   const [postCount, recentPosts] = await Promise.all([
     prisma.post.count({ where: { equipmentId: equipment.id, deletedAt: null } }),
     prisma.post.findMany({
@@ -105,6 +108,7 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
       status: true,
       startAt: true,
       endAt: true,
+      unitLabel: true,
       user: { select: { username: true } },
     },
   });
@@ -114,6 +118,7 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
     startAtIso: r.startAt.toISOString(),
     endAtIso: r.endAt.toISOString(),
     username: r.user.username,
+    unitLabel: (r as unknown as { unitLabel?: string | null }).unitLabel ?? null,
   }));
 
   return (
@@ -124,6 +129,11 @@ export default async function EquipmentDetailPage({ params, searchParams }: Page
             <div className="text-xs text-zinc-500 dark:text-zinc-400">기자재 정보</div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{equipment.name}</h1>
             <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">/{equipment.slug}</div>
+            {unitConfig && (
+              <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                총 {unitConfig.count}대 ({unitConfig.labels.join(", ")})
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {me ? (

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { PrismaClient, UserRole, OperatorStatus, ReservationStatus, OperatorWorkLogStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { getEquipmentUnitLabels } from "@/lib/equipment-units";
 import { requireUser } from "@/lib/auth";
 
 /** Prisma enum 필터용 mutable 배열 (readonly 할당 오류 방지) */
@@ -36,6 +37,7 @@ const CreateReservationSchema = z.object({
   studentNumber: z.string().max(4).optional(),
   note: z.string().max(500).optional(),
   operatorId: z.string().uuid().optional(),
+   unitLabel: z.string().max(16).optional(),
 });
 
 export async function createReservationAction(_: unknown, formData: FormData) {
@@ -49,6 +51,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
     studentNumber: (formData.get("studentNumber") || undefined) as string | undefined,
     note: (formData.get("note") || undefined) as string | undefined,
     operatorId: (formData.get("operatorId") || undefined) as string | undefined,
+    unitLabel: (formData.get("unitLabel") || undefined) as string | undefined,
   });
   if (!parsed.success) return { ok: false as const, error: "VALIDATION_ERROR" as const };
 
@@ -81,6 +84,17 @@ export async function createReservationAction(_: unknown, formData: FormData) {
   });
   if (!equipment || !equipment.isActive) return { ok: false as const, error: "INVALID_EQUIPMENT" as const };
 
+  // 장비 단위(여러 대) 설정: 해당 기자재가 여러 대인 경우 unitLabel 필수
+  const unitLabels = getEquipmentUnitLabels(equipment.name);
+  const rawUnitLabel = (parsed.data.unitLabel ?? "").trim();
+  const unitLabel =
+    unitLabels.length === 0
+      ? null
+      : rawUnitLabel || null;
+  if (unitLabels.length > 0 && (!unitLabel || !unitLabels.includes(unitLabel))) {
+    return { ok: false as const, error: "INVALID_UNIT_LABEL" as const };
+  }
+
   let operatorId: string | null = null;
   if (parsed.data.operatorId) {
     const operator = await prisma.user.findFirst({
@@ -111,9 +125,14 @@ export async function createReservationAction(_: unknown, formData: FormData) {
             endAt: { gt: startAt },
           };
 
-          // 한 기자재는 동시에 한 사용자만 사용 가능 (동일 기자재 시간 겹침 불가)
+          // 한 기자재 단위(예: UV-vis A / B)는 동시에 한 사용자만 사용 가능
+          // 단일 장비인 경우 unitLabel은 null이며, 기존 동작과 동일하게 전체 장비 1대만 허용
           const equipmentOverlap = await tx.reservation.findFirst({
-            where: { equipmentId: equipment.id, ...overlapWhere },
+            where: {
+              equipmentId: equipment.id,
+              ...(unitLabels.length > 0 ? { unitLabel } : {}),
+              ...overlapWhere,
+            },
             select: { id: true },
           });
           if (equipmentOverlap) return { ok: false as const, error: "EQUIPMENT_CONFLICT" as const };
@@ -146,6 +165,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
               startAt,
               endAt,
               note,
+              unitLabel: unitLabel ?? undefined,
               operatorId: operatorId ?? undefined,
               operatorStatus: operatorId ? "REQUESTED" : "NONE",
             },

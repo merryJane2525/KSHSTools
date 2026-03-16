@@ -17,6 +17,7 @@ type ReservationRow = {
   startAt: Date;
   endAt: Date;
   title: string | null;
+  unitLabel: string | null;
   user: { username: string };
 };
 
@@ -54,6 +55,7 @@ export default async function ReservationDetailPage({ params, searchParams }: Pa
       startAt: true,
       endAt: true,
       title: true,
+      unitLabel: true,
       user: { select: { username: true } },
     },
   });
@@ -65,6 +67,7 @@ export default async function ReservationDetailPage({ params, searchParams }: Pa
     endAtIso: r.endAt.toISOString(),
     username: r.user.username,
     title: r.title,
+    unitLabel: r.unitLabel,
   }));
 
   const imagePath = `/equipments/${equipment.slug}.jpg`;

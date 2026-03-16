@@ -14,6 +14,7 @@ type ReservationForCalendar = {
   startAtIso: string;
   endAtIso: string;
   username: string;
+  unitLabel?: string | null;
 };
 
 function formatWeekLabel(weekStart: string): string {
@@ -51,14 +52,17 @@ export function WeekCalendarView({
     dayIndex * 24 * 60 * 60 * 1000 +
     (START_HOUR * 60 * 60 * 1000 + slotIndex * SLOT_MINUTES * 60 * 1000);
 
-  const getSlotContent = (dayIndex: number, slotIndex: number): { username: string; status: string } | null => {
+  const getSlotContent = (
+    dayIndex: number,
+    slotIndex: number
+  ): { username: string; status: string; unitLabel?: string | null } | null => {
     const slotStart = slotToMs(dayIndex, slotIndex);
     const slotEnd = slotStart + SLOT_MINUTES * 60 * 1000;
     for (const r of reservations) {
       const rStart = new Date(r.startAtIso).getTime();
       const rEnd = new Date(r.endAtIso).getTime();
       // 예약 구간과 슬롯 구간이 겹치는지
-      if (rStart < slotEnd && rEnd > slotStart) return { username: r.username, status: r.status };
+      if (rStart < slotEnd && rEnd > slotStart) return { username: r.username, status: r.status, unitLabel: r.unitLabel };
     }
     return null;
   };
@@ -134,9 +138,12 @@ export function WeekCalendarView({
                             ? "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200"
                             : "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200"
                         }`}
-                        title={`@${content.username} ${content.status === "PENDING" ? "(대기)" : "(승인)"}`}
+                        title={`@${content.username}${content.unitLabel ? ` (${content.unitLabel})` : ""} ${
+                          content.status === "PENDING" ? "(대기)" : "(승인)"
+                        }`}
                       >
                         @{content.username}
+                        {content.unitLabel ? ` (${content.unitLabel})` : ""}
                       </span>
                     ) : (
                       <span className="inline-block min-h-[18px] w-full" aria-hidden />

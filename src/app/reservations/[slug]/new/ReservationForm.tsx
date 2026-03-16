@@ -3,6 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { createReservationFormAction } from "@/app/actions/reservations";
+import { getEquipmentUnitLabels } from "@/lib/equipment-units";
 
 const SLOT_MINUTES = 10;
 const timeOptions: string[] = [];
@@ -56,6 +57,7 @@ export function ReservationForm({
   }, []);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const unitLabels = getEquipmentUnitLabels(equipmentName);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const form = e.currentTarget;
@@ -91,6 +93,11 @@ export function ReservationForm({
 
       <div className="rounded-xl border border-primary/10 bg-white p-5 shadow-sm dark:bg-[#15191d] dark:border-primary/20">
         <h2 className="text-lg font-bold text-primary">예약 신청: {equipmentName}</h2>
+        {unitLabels.length > 0 && (
+          <p className="mt-1 text-xs text-primary/70">
+            이 기자재는 총 {unitLabels.length}대입니다. 아래에서 사용할 장비를 선택해 주세요.
+          </p>
+        )}
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block">
@@ -141,6 +148,24 @@ export function ReservationForm({
             className="mt-1 w-full resize-y rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-primary focus:ring-1 focus:ring-primary/20 dark:border-primary/20 dark:bg-primary/5"
           />
         </label>
+
+        {unitLabels.length > 0 && (
+          <label className="mt-4 block">
+            <span className="text-sm font-bold text-primary/80">사용 장비 (개별 장비 선택)</span>
+            <select
+              name="unitLabel"
+              required
+              className="mt-1 w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-primary focus:ring-1 focus:ring-primary/20 dark:border-primary/20 dark:bg-primary/5"
+            >
+              <option value="">장비를 선택하세요</option>
+              {unitLabels.map((label) => (
+                <option key={label} value={label}>
+                  {equipmentName} {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <label className="block">

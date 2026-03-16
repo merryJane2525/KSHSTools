@@ -10,6 +10,7 @@ type ReservationForCalendar = {
   endAtIso: string;
   username: string;
   title: string | null;
+  unitLabel?: string | null;
 };
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -243,8 +244,15 @@ export function EquipmentReservationDetail({
                   <tbody>
                     {selectedReservations.map((r) => (
                       <tr key={r.id} className="border-b border-primary/5">
-                        <td className="py-2 text-primary/80">@{r.username}</td>
-                        <td className="py-2 text-primary/80">{r.title || "—"}</td>
+                        <td className="py-2 text-primary/80">
+                          @{r.username}
+                          {r.unitLabel ? (
+                            <span className="ml-1 text-xs text-primary/60">({r.unitLabel})</span>
+                          ) : null}
+                        </td>
+                        <td className="py-2 text-primary/80">
+                          {r.title || (r.unitLabel ? `${equipmentName} ${r.unitLabel}` : "—")}
+                        </td>
                         <td className="py-2 text-primary/80">
                           {formatKstDate(r.startAtIso)} ~ {formatKstDate(r.endAtIso)}
                         </td>
