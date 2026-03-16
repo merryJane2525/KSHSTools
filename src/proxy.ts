@@ -5,6 +5,7 @@ import { verifySessionToken, SESSION_COOKIE } from "@/lib/auth-session";
 /** 비로그인 사용자 허용 경로: 매뉴얼, 검색, 로그인/회원가입, 홈, 정적/API */
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/" || pathname === "/login" || pathname === "/signup") return true;
+  if (pathname === "/about") return true;
   if (pathname.startsWith("/search")) return true;
   if (pathname.startsWith("/api")) return true;
   if (pathname.startsWith("/_next") || pathname.startsWith("/favicon")) return true;
