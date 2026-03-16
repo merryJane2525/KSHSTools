@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { loginFormAction } from "@/app/actions/auth";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
+import { LoadingSpinner } from "@/app/_components/LoadingSpinner";
 
 function LoginSubmitButton() {
   const { pending } = useFormStatus();
@@ -13,9 +14,10 @@ function LoginSubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
     >
-      {pending ? "로그인 중..." : "로그인"}
+      {pending && <LoadingSpinner size={14} aria-label="로그인 처리 중" />}
+      <span>{pending ? "로그인 중..." : "로그인"}</span>
     </button>
   );
 }

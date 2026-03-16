@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { createReservationFormAction } from "@/app/actions/reservations";
 import { getEquipmentUnitLabels } from "@/lib/equipment-units";
+import { LoadingSpinner } from "@/app/_components/LoadingSpinner";
 
 const SLOT_MINUTES = 10;
 const timeOptions: string[] = [];
@@ -21,9 +22,10 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
+      className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
     >
-      {pending ? "예약 신청 중..." : "예약 신청하기"}
+      {pending && <LoadingSpinner size={14} aria-label="예약 처리 중" />}
+      <span>{pending ? "예약 신청 중..." : "예약 신청하기"}</span>
     </button>
   );
 }

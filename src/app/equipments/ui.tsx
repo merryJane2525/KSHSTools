@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { createEquipmentFormAction } from "@/app/actions/equipments";
+import { LoadingSpinner } from "@/app/_components/LoadingSpinner";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -10,9 +11,10 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-xl bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
     >
-      {pending ? "추가 중..." : "추가"}
+      {pending && <LoadingSpinner size={14} aria-label="기자재 추가 중" />}
+      <span>{pending ? "추가 중..." : "추가"}</span>
     </button>
   );
 }

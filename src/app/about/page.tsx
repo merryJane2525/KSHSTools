@@ -9,6 +9,120 @@ const OPERATOR_LIST: { generation: string; studentName: string; equipmentName: s
   { generation: "32", studentName: "원재인", equipmentName: "커뮤니티·리드", email: "zaixiang0001@gmail.com" },
 ];
 
+type LabOperator = { generation: string; studentName: string; equipmentName: string };
+
+type LabOperatorSection = { labName: string; operators: LabOperator[] };
+
+/** 과학실(장소)별 심화기자재 오퍼레이터 명단 */
+const LAB_OPERATOR_SECTIONS: LabOperatorSection[] = [
+  {
+    labName: "물리실",
+    operators: [
+      // 레이저커팅기
+      { generation: "33", studentName: "김창한", equipmentName: "레이저커팅기" },
+      { generation: "33", studentName: "황승원", equipmentName: "레이저커팅기" },
+      { generation: "32", studentName: "이지호", equipmentName: "레이저커팅기" },
+      { generation: "33", studentName: "최송학", equipmentName: "레이저커팅기" },
+      { generation: "32", studentName: "이동률", equipmentName: "레이저커팅기" },
+      { generation: "33", studentName: "권도윤", equipmentName: "레이저커팅기" },
+      // 열화상 카메라
+      { generation: "33", studentName: "김창한", equipmentName: "열화상 카메라" },
+      { generation: "33", studentName: "심지후", equipmentName: "열화상 카메라" },
+      { generation: "33", studentName: "황승원", equipmentName: "열화상 카메라" },
+      { generation: "32", studentName: "정효림", equipmentName: "열화상 카메라" },
+      { generation: "32", studentName: "이현우", equipmentName: "열화상 카메라" },
+      // 뇌파 측정기
+      { generation: "33", studentName: "정은혁", equipmentName: "뇌파 측정기" },
+      { generation: "32", studentName: "정효림", equipmentName: "뇌파 측정기" },
+      { generation: "32", studentName: "이민찬", equipmentName: "뇌파 측정기" },
+      // 초고속 카메라
+      { generation: "33", studentName: "박승희", equipmentName: "초고속 카메라" },
+      { generation: "33", studentName: "김창한", equipmentName: "초고속 카메라" },
+      { generation: "33", studentName: "강동헌", equipmentName: "초고속 카메라" },
+      { generation: "33", studentName: "김도윤", equipmentName: "초고속 카메라" },
+      { generation: "33", studentName: "정은혁", equipmentName: "초고속 카메라" },
+      { generation: "33", studentName: "조서찬", equipmentName: "초고속 카메라" },
+    ],
+  },
+  {
+    labName: "화학실",
+    operators: [
+      // SEM
+      { generation: "33", studentName: "성희도", equipmentName: "SEM" },
+      { generation: "33", studentName: "신채린", equipmentName: "SEM" },
+      { generation: "33", studentName: "추윤지", equipmentName: "SEM" },
+      { generation: "32", studentName: "이정호", equipmentName: "SEM" },
+      { generation: "32", studentName: "원재인", equipmentName: "SEM" },
+      // IR
+      { generation: "33", studentName: "정윤", equipmentName: "IR" },
+      { generation: "33", studentName: "조수임", equipmentName: "IR" },
+      { generation: "33", studentName: "권태선", equipmentName: "IR" },
+      { generation: "32", studentName: "김나람", equipmentName: "IR" },
+      { generation: "32", studentName: "김창규", equipmentName: "IR" },
+      // UV-vis 분광광도계
+      { generation: "33", studentName: "김동건", equipmentName: "UV-vis 분광광도계" },
+      { generation: "33", studentName: "서예련", equipmentName: "UV-vis 분광광도계" },
+      { generation: "32", studentName: "민지현", equipmentName: "UV-vis 분광광도계" },
+      { generation: "32", studentName: "박기동", equipmentName: "UV-vis 분광광도계" },
+      { generation: "32", studentName: "유승원", equipmentName: "UV-vis 분광광도계" },
+      // NMR
+      { generation: "33", studentName: "박윤수", equipmentName: "NMR" },
+      { generation: "32", studentName: "홍진기", equipmentName: "NMR" },
+    ],
+  },
+  {
+    labName: "생명과학실",
+    operators: [
+      // PCR
+      { generation: "33", studentName: "김윤진", equipmentName: "PCR" },
+      { generation: "32", studentName: "김승호", equipmentName: "PCR" },
+      { generation: "32", studentName: "원하담", equipmentName: "PCR" },
+      // 전기영동
+      { generation: "33", studentName: "신성호", equipmentName: "전기영동" },
+      { generation: "32", studentName: "임승준", equipmentName: "전기영동" },
+      { generation: "32", studentName: "천현서", equipmentName: "전기영동" },
+      // 회전증발농축기
+      { generation: "33", studentName: "박서영", equipmentName: "회전증발농축기" },
+      { generation: "33", studentName: "박상현", equipmentName: "회전증발농축기" },
+      { generation: "32", studentName: "남규민", equipmentName: "회전증발농축기" },
+      // 동결건조기
+      { generation: "33", studentName: "정예담", equipmentName: "동결건조기" },
+      // 형광현미경
+      { generation: "33", studentName: "김슬아", equipmentName: "형광현미경" },
+      { generation: "33", studentName: "김엘리", equipmentName: "형광현미경" },
+      { generation: "32", studentName: "이주혁", equipmentName: "형광현미경" },
+    ],
+  },
+  {
+    labName: "지구과학실",
+    operators: [
+      { generation: "32", studentName: "김소희", equipmentName: "편광 현미경 및 박편" },
+      { generation: "32", studentName: "김한중", equipmentName: "편광 현미경 및 박편" },
+    ],
+  },
+  {
+    labName: "천문대",
+    operators: [
+      // 연구용 망원경
+      { generation: "33", studentName: "김혜원", equipmentName: "연구용 망원경" },
+      { generation: "33", studentName: "심도원", equipmentName: "연구용 망원경" },
+      { generation: "33", studentName: "최명서", equipmentName: "연구용 망원경" },
+      { generation: "33", studentName: "유정우", equipmentName: "연구용 망원경" },
+      { generation: "32", studentName: "이건희", equipmentName: "연구용 망원경" },
+      { generation: "32", studentName: "이아림", equipmentName: "연구용 망원경" },
+      { generation: "32", studentName: "서민성", equipmentName: "연구용 망원경" },
+      // CPC / 행성캠 / Refracting Telescope 는 추후 업데이트 (운영 방식 정리 후)
+    ],
+  },
+  {
+    labName: "코어랩",
+    operators: [
+      { generation: "33", studentName: "이창민", equipmentName: "서버 컴퓨터" },
+      { generation: "32", studentName: "최원섭", equipmentName: "서버 컴퓨터" },
+    ],
+  },
+];
+
 export const revalidate = 3600;
 
 const seoKeywords = [
@@ -63,14 +177,14 @@ export default function AboutPage() {
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-5 text-sm text-zinc-600 dark:text-zinc-400">
           <div className="font-semibold text-zinc-800 dark:text-zinc-200">KSHS 심화기자재 운영</div>
 
-          {/* 오퍼레이터 명단: 00기 학생이름 | 기자재 이름 오퍼레이터 | 이메일 (추후 상세 업데이트) */}
-          <div className="mt-3 font-medium text-zinc-700 dark:text-zinc-300">오퍼레이터 명단</div>
+          {/* 커뮤니티 운영/리드 */}
+          <div className="mt-3 font-medium text-zinc-700 dark:text-zinc-300">커뮤니티·플랫폼 운영</div>
           <ul className="mt-2 space-y-1.5">
             {OPERATOR_LIST.map((op) => (
               <li key={`${op.generation}-${op.studentName}-${op.equipmentName}`}>
                 <span>{op.generation}기 {op.studentName}</span>
                 <span className="mx-1.5 text-zinc-400 dark:text-zinc-500">|</span>
-                <span>{op.equipmentName} 오퍼레이터</span>
+                <span>{op.equipmentName}</span>
                 <span className="mx-1.5 text-zinc-400 dark:text-zinc-500">|</span>
                 <a
                   href={`mailto:${op.email}`}
@@ -81,6 +195,30 @@ export default function AboutPage() {
               </li>
             ))}
           </ul>
+
+          {/* 과학실(장소)별 오퍼레이터 명단 */}
+          <div className="mt-5 font-medium text-zinc-700 dark:text-zinc-300">과학실별 심화기자재 오퍼레이터</div>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            형식: <span className="font-mono">00기 학생이름 | 기자재 이름 오퍼레이터</span>
+          </p>
+          <div className="mt-3 space-y-3">
+            {LAB_OPERATOR_SECTIONS.map((section) => (
+              <div key={section.labName}>
+                <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  {section.labName}
+                </div>
+                <ul className="mt-1 space-y-1.5">
+                  {section.operators.map((op) => (
+                    <li key={`${section.labName}-${op.generation}-${op.studentName}-${op.equipmentName}`}>
+                      <span>{op.generation}기 {op.studentName}</span>
+                      <span className="mx-1.5 text-zinc-400 dark:text-zinc-500">|</span>
+                      <span>{op.equipmentName} 오퍼레이터</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
       </AnimateOnScroll>
 

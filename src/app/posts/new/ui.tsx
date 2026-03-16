@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { createPostFormAction } from "@/app/actions/posts";
+import { LoadingSpinner } from "@/app/_components/LoadingSpinner";
 
 function PostSubmitButton() {
   const { pending } = useFormStatus();
@@ -11,9 +12,10 @@ function PostSubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+      className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
     >
-      {pending ? "등록 중..." : "등록"}
+      {pending && <LoadingSpinner size={14} aria-label="게시글 등록 중" />}
+      <span>{pending ? "등록 중..." : "등록"}</span>
     </button>
   );
 }

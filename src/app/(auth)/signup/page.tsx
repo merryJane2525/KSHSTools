@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { signupFormAction } from "@/app/actions/auth";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
+import { LoadingSpinner } from "@/app/_components/LoadingSpinner";
 
 function SignupSubmitButton() {
   const { pending } = useFormStatus();
@@ -13,9 +14,10 @@ function SignupSubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
     >
-      {pending ? "가입 중..." : "회원가입"}
+      {pending && <LoadingSpinner size={14} aria-label="회원가입 처리 중" />}
+      <span>{pending ? "가입 중..." : "회원가입"}</span>
     </button>
   );
 }
