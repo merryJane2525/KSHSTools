@@ -198,9 +198,6 @@ export default function AboutPage() {
 
           {/* 과학실(장소)별 오퍼레이터 명단 */}
           <div className="mt-5 font-medium text-zinc-700 dark:text-zinc-300">과학실별 심화기자재 오퍼레이터</div>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            형식: <span className="font-mono">00기 학생이름 | 기자재 이름 오퍼레이터</span>
-          </p>
           <div className="mt-3 space-y-3">
             {LAB_OPERATOR_SECTIONS.map((section) => (
               <div key={section.labName}>
