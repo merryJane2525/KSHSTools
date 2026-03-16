@@ -268,12 +268,10 @@ export async function cancelReservationAction(_: unknown, formData: FormData) {
           : {}),
       },
     }),
-    prisma.operatorWorkLog
-      .updateMany({
-        where: { reservationId: reservation.id },
-        data: { status: "CANCELED" },
-      })
-      .then(() => {}),
+    prisma.operatorWorkLog.updateMany({
+      where: { reservationId: reservation.id },
+      data: { status: "CANCELED" },
+    }),
   ]);
 
   if (reservation.operatorId && ["REQUESTED", "APPROVED"].includes(reservation.operatorStatus)) {

@@ -241,15 +241,41 @@ export async function deletePostAction(_: unknown, formData: FormData) {
   });
   if (!post) return { ok: false as const, error: "NOT_FOUND" as const };
 
+  // 1) 게시글을 soft delete 처리 (화면에서는 보이지 않게 유지)
   await prisma.post.update({
     where: { id: parsed.data.postId },
     data: { deletedAt: new Date() },
   });
 
-  // 해당 스레드(게시글)에 연동된 멘션 기록 제거 → 오퍼레이터 탭에서 사라지도록
+  // 2) 해당 스레드(게시글)에 연동된 멘션 기록 제거 → 오퍼레이터 탭에서 사라지도록
   await prisma.mention.deleteMany({ where: { postId: parsed.data.postId } }).catch(() => {});
 
-  // 참고: 댓글 삭제 시에는 prisma.mention.deleteMany({ where: { targetType: "COMMENT", targetId: commentId } }) 호출
+  // 3) 게시글에 달린 댓글 및 관련 알림까지 함께 정리
+  const comments = await prisma.comment
+    .findMany({
+      where: { postId: parsed.data.postId },
+      select: { id: true },
+    })
+    .catch(() => []);
+  const commentIds = comments.map((c) => c.id);
+
+  if (commentIds.length > 0) {
+    // 댓글과 연결된 알림 삭제 (댓글이 사라지므로 함께 정리)
+    await prisma.notification
+      .deleteMany({
+        where: {
+          commentId: { in: commentIds },
+        },
+      })
+      .catch(() => {});
+
+    // 실제 댓글 레코드 삭제
+    await prisma.comment
+      .deleteMany({
+        where: { id: { in: commentIds } },
+      })
+      .catch(() => {});
+  }
 
   await syncPostSearchDocumentById(parsed.data.postId).catch(() => {});
   revalidatePath("/community");
