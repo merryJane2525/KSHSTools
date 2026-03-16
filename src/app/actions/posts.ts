@@ -251,13 +251,14 @@ export async function deletePostAction(_: unknown, formData: FormData) {
   await prisma.mention.deleteMany({ where: { postId: parsed.data.postId } }).catch(() => {});
 
   // 3) 게시글에 달린 댓글 및 관련 알림까지 함께 정리
-  const comments = await prisma.comment
-    .findMany({
-      where: { postId: parsed.data.postId },
-      select: { id: true },
-    })
-    .catch(() => []);
-  const commentIds = comments.map((c) => c.id);
+  const comments: { id: string }[] =
+    (await prisma.comment
+      .findMany({
+        where: { postId: parsed.data.postId },
+        select: { id: true },
+      })
+      .catch(() => [])) ?? [];
+  const commentIds = comments.map((c: { id: string }) => c.id);
 
   if (commentIds.length > 0) {
     // 댓글과 연결된 알림 삭제 (댓글이 사라지므로 함께 정리)
