@@ -28,7 +28,10 @@ const EQUIPMENT_LIST = [
   "행성캠",
   "Refracting Telescope",
   "서버 컴퓨터",
-];
+] as const;
+
+/** 3열 그리드를 맞추기 위한 빈 칸 개수 (20개 → 21칸) */
+const PAD_CELLS = (3 - (EQUIPMENT_LIST.length % 3)) % 3;
 
 export function EquipmentTable({ equipmentSlugMap, equipments }: EquipmentTableProps) {
   return (
@@ -39,12 +42,14 @@ export function EquipmentTable({ equipmentSlugMap, equipments }: EquipmentTableP
           const cellContent = slug ? (
             <Link
               href={`/equipments/${slug}`}
-              className="block px-4 py-3 text-sm text-center text-primary/70 hover:bg-primary/5 hover:text-primary transition-colors dark:text-primary/80 dark:hover:bg-primary/20"
+              className="flex min-h-[3rem] items-center justify-center px-4 py-3 text-sm text-center text-primary/70 hover:bg-primary/5 hover:text-primary transition-colors dark:text-primary/80 dark:hover:bg-primary/20"
             >
               {equipment}
             </Link>
           ) : (
-            <div className="px-4 py-3 text-sm text-center text-primary/50 dark:text-primary/60">{equipment}</div>
+            <div className="flex min-h-[3rem] items-center justify-center px-4 py-3 text-sm text-center text-primary/50 dark:text-primary/60">
+              {equipment}
+            </div>
           );
 
           return (
@@ -53,6 +58,13 @@ export function EquipmentTable({ equipmentSlugMap, equipments }: EquipmentTableP
             </div>
           );
         })}
+        {Array.from({ length: PAD_CELLS }, (_, i) => (
+          <div
+            key={`pad-${i}`}
+            className="min-h-[3rem] bg-zinc-100/80 dark:bg-zinc-800/50"
+            aria-hidden
+          />
+        ))}
       </div>
     </div>
   );
