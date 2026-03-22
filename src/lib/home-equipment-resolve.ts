@@ -69,6 +69,20 @@ export function buildEquipmentLookupMap(
   return map;
 }
 
+/** lookupMap에서만 slug 조회 (재귀·별칭 체인 없음 — 스택 오버플로 방지) */
+function resolveSlugFromLookupMapOnly(label: string, lookupMap: Map<string, string>): string | undefined {
+  const candidates = [
+    normalizeEquipmentLabel(label),
+    compactEquipmentLabel(label),
+    label.trim().toLowerCase(),
+  ];
+  for (const c of candidates) {
+    const s = lookupMap.get(c);
+    if (s) return s;
+  }
+  return undefined;
+}
+
 function matchesLoosely(eqName: string, homeLabel: string): boolean {
   const n1 = normalizeEquipmentLabel(eqName);
   const n2 = normalizeEquipmentLabel(homeLabel);
@@ -90,22 +104,15 @@ export function lookupEquipmentSlug(
   lookupMap: Map<string, string>,
   equipments?: Array<{ name: string; slug: string }>,
 ): string | undefined {
-  const candidates = [
-    normalizeEquipmentLabel(label),
-    compactEquipmentLabel(label),
-    label.trim().toLowerCase(),
-  ];
-  for (const c of candidates) {
-    const s = lookupMap.get(c);
-    if (s) return s;
-  }
+  const direct = resolveSlugFromLookupMapOnly(label, lookupMap);
+  if (direct) return direct;
 
   const aliasMap = getHomeLabelAliasMap();
   const aliasAlts =
     aliasMap.get(normalizeEquipmentLabel(label)) ?? aliasMap.get(compactEquipmentLabel(label));
   if (aliasAlts) {
     for (const altName of aliasAlts) {
-      const s = lookupEquipmentSlug(altName, lookupMap, undefined);
+      const s = resolveSlugFromLookupMapOnly(altName, lookupMap);
       if (s) return s;
     }
   }
