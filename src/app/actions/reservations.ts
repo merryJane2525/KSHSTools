@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import type { PrismaClient, UserRole, OperatorStatus, ReservationStatus, OperatorWorkLogStatus } from "@prisma/client";
+import type { Prisma, UserRole, OperatorStatus, ReservationStatus, OperatorWorkLogStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getEquipmentUnitLabels } from "@/lib/equipment-units";
 import { requireUser } from "@/lib/auth";
@@ -13,12 +13,6 @@ const ROLES_OPERATOR_OR_ADMIN: UserRole[] = ["OPERATOR", "ADMIN"];
 const OPERATOR_STATUS_REQUESTED_OR_APPROVED: OperatorStatus[] = ["REQUESTED", "APPROVED"];
 const RESERVATION_STATUS_PENDING_OR_APPROVED: ReservationStatus[] = ["PENDING", "APPROVED"];
 const WORKLOG_STATUS_SCHEDULED_OR_COMPLETED: OperatorWorkLogStatus[] = ["SCHEDULED", "COMPLETED"];
-
-/** 트랜잭션 콜백에서 사용하는 클라이언트 타입 ($ 메서드 제외) */
-type TxClient = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
->;
 
 function parseKstDatetimeLocal(input: string): Date | null {
   // Accept "YYYY-MM-DDTHH:mm" from <input type="datetime-local">
@@ -117,7 +111,7 @@ export async function createReservationAction(_: unknown, formData: FormData) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const result = await prisma.$transaction(
-        async (tx: TxClient) => {
+        async (tx: Prisma.TransactionClient) => {
           const overlapWhere = {
             cancelledAt: null,
             status: "APPROVED" as const,

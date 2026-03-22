@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
@@ -274,7 +275,7 @@ export async function deleteUserAction(_: unknown, formData: FormData) {
 
   const userId = parsed.data.userId;
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const reservationIds = (
       await tx.reservation.findMany({ where: { userId }, select: { id: true } })
     ).map((r) => r.id);
