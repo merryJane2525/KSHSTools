@@ -13,7 +13,6 @@ type EquipmentItem = {
 
 export default async function ReservationsPage() {
   const me = await getCurrentUser();
-  if (!me) redirect("/login");
 
   const equipments: EquipmentItem[] = await unstable_cache(
     () =>

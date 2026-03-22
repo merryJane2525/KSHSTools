@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { processManualContent } from "@/lib/markdown";
@@ -28,7 +28,6 @@ export default async function EquipmentManualPage({
   params: Promise<{ slug: string }> | { slug: string };
 }) {
   const me = await getCurrentUser();
-  if (!me) redirect("/login");
 
   const resolvedParams = await Promise.resolve(params);
   const { slug } = resolvedParams;
@@ -91,7 +90,7 @@ export default async function EquipmentManualPage({
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{equipment.name} 사용 메뉴얼</h1>
           </div>
           <div className="flex gap-2">
-            {me.role === "ADMIN" && equipment.id && (
+            {me?.role === "ADMIN" && equipment.id && (
               <Link
                 href={`/equipments/${equipment.slug}/manual/edit`}
                 className="rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
