@@ -29,6 +29,26 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* 모바일: 시스템 글자 크기 자동 확대 완화, 터치 지연 최소화 */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* iOS Safari: 입력 포커스 시 자동 확대 방지(16px 이상) */
+@media (max-width: 640px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 /* 선택 영역 (OPERATOR_WORK: selection:bg-primary/10) */
 ::selection {
   background: color-mix(in srgb, var(--primary) 10%, transparent);

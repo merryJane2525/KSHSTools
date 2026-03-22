@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/app/_components/Header";
@@ -21,6 +21,17 @@ const seoKeywords = [
   "KSHS", "KSHS 심화기자재", "강원과학고 오퍼레이터", "강원과학고 원재인", "KSHS 원재인", "32기 원재인",
   "심화기자재", "기자재", "실험", "SEM", "FT-IR", "NMR", "기자재 사용법", "실험 노하우", "기자재 Q&A",
 ];
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f7f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#15191d" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -121,7 +132,9 @@ export default function RootLayout({
         <ThemeProvider>
           <div className="min-h-dvh bg-background text-foreground overflow-x-hidden">
             <Header />
-            <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:max-w-6xl sm:px-6 lg:max-w-7xl lg:px-8">{children}</main>
+            <main className="mx-auto w-full max-w-5xl px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:max-w-6xl sm:px-6 lg:max-w-7xl lg:px-8">
+              {children}
+            </main>
           </div>
         </ThemeProvider>
       </body>

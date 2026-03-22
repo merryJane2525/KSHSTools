@@ -243,7 +243,7 @@ const DeleteUserSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** ADMIN: 사용자 삭제 (소프트 삭제 = 계정 정지, 로그인 불가) */
+/** ADMIN: 사용자 삭제 — DB에서 행 제거 (게시글·댓글·예약 등 종속 데이터도 정리) */
 export async function deleteUserAction(_: unknown, formData: FormData) {
   const me = await requireUser();
   if (me.role !== "ADMIN") {
@@ -272,9 +272,79 @@ export async function deleteUserAction(_: unknown, formData: FormData) {
     return { ok: false as const, error: "CANNOT_DELETE_SELF" as const };
   }
 
-  await prisma.user.update({
-    where: { id: parsed.data.userId },
-    data: { status: "SUSPENDED" },
+  const userId = parsed.data.userId;
+
+  await prisma.$transaction(async (tx) => {
+    const reservationIds = (
+      await tx.reservation.findMany({ where: { userId }, select: { id: true } })
+    ).map((r) => r.id);
+    if (reservationIds.length) {
+      await tx.notification.deleteMany({ where: { reservationId: { in: reservationIds } } });
+    }
+
+    const postIds = (await tx.post.findMany({ where: { authorId: userId }, select: { id: true } })).map(
+      (p) => p.id,
+    );
+
+    const commentIdsOnUserPosts = postIds.length
+      ? (await tx.comment.findMany({ where: { postId: { in: postIds } }, select: { id: true } })).map(
+          (c) => c.id,
+        )
+      : [];
+
+    const commentIdsByUser = (await tx.comment.findMany({ where: { authorId: userId }, select: { id: true } })).map(
+      (c) => c.id,
+    );
+
+    const allCommentIds = [...new Set([...commentIdsOnUserPosts, ...commentIdsByUser])];
+
+    await tx.notification.deleteMany({
+      where: {
+        OR: [
+          { userId },
+          { actorId: userId },
+          ...(postIds.length ? [{ postId: { in: postIds } }] : []),
+          ...(allCommentIds.length ? [{ commentId: { in: allCommentIds } }] : []),
+        ],
+      },
+    });
+
+    await tx.mention.deleteMany({
+      where: {
+        OR: [
+          { mentionedUserId: userId },
+          { mentionedById: userId },
+          ...(postIds.length ? [{ postId: { in: postIds } }] : []),
+        ],
+      },
+    });
+
+    await tx.postAssignment.deleteMany({
+      where: {
+        OR: [
+          { operatorId: userId },
+          { createdById: userId },
+          ...(postIds.length ? [{ postId: { in: postIds } }] : []),
+        ],
+      },
+    });
+
+    if (postIds.length) {
+      await tx.searchDocument.deleteMany({ where: { type: "qa", sourceId: { in: postIds } } });
+    }
+
+    if (postIds.length) {
+      await tx.comment.deleteMany({ where: { postId: { in: postIds } } });
+      await tx.post.deleteMany({ where: { id: { in: postIds } } });
+    }
+
+    await tx.comment.deleteMany({ where: { authorId: userId } });
+
+    await tx.report.deleteMany({ where: { reporterId: userId } });
+
+    await tx.auditLog.updateMany({ where: { actorId: userId }, data: { actorId: null } });
+
+    await tx.user.delete({ where: { id: userId } });
   });
 
   try {
@@ -283,8 +353,8 @@ export async function deleteUserAction(_: unknown, formData: FormData) {
         actorId: me.id,
         action: "DELETE_USER",
         targetType: "User",
-        targetId: parsed.data.userId,
-        meta: { previousStatus: targetUser.status },
+        targetId: userId,
+        meta: { previousStatus: targetUser.status, hardDelete: true },
       },
     });
   } catch {
@@ -292,6 +362,7 @@ export async function deleteUserAction(_: unknown, formData: FormData) {
   }
 
   revalidatePath("/admin/users");
+  revalidatePath("/community");
   return { ok: true as const };
 }
 

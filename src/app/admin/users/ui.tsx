@@ -269,12 +269,16 @@ function UserRow({ user, currentUserId }: { user: UserListItem; currentUserId: s
             </form>
           )}
 
-          {/* 삭제 (소프트 삭제 = 정지) */}
+          {/* 삭제 (DB에서 행 및 관련 게시글·댓글·예약 등 제거) */}
           {canManage && (
             <form
               action={deleteUserFormAction}
               onSubmit={(e) => {
-                if (!confirm("해당 사용자를 삭제(정지)하시겠습니까? 로그인이 불가능해집니다.")) {
+                if (
+                  !confirm(
+                    "해당 사용자를 완전히 삭제하시겠습니까? 계정과 작성 글·댓글·예약 등 연관 데이터가 데이터베이스에서 삭제되며 되돌릴 수 없습니다.",
+                  )
+                ) {
                   e.preventDefault();
                 }
               }}
@@ -282,8 +286,7 @@ function UserRow({ user, currentUserId }: { user: UserListItem; currentUserId: s
               <input type="hidden" name="userId" value={user.id} />
               <button
                 type="submit"
-                disabled={!isActive}
-                className="rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 disabled:opacity-60"
+                className="rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900"
               >
                 삭제
               </button>
