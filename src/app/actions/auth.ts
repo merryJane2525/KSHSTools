@@ -4,51 +4,8 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { hashPassword, verifyPassword } from "@/lib/password";
+import { verifyPassword } from "@/lib/password";
 import { clearSessionCookie, setSessionCookie, requireUser } from "@/lib/auth";
-
-const SignupSchema = z.object({
-  email: z.string().email().max(255),
-  username: z
-    .string()
-    .min(3)
-    .max(32)
-    .regex(/^[a-zA-Z0-9_]+$/, "username must be alphanumeric/underscore"),
-  password: z.string().min(8).max(72),
-});
-
-export async function signupAction(_: unknown, formData: FormData) {
-  const input = SignupSchema.safeParse({
-    email: formData.get("email"),
-    username: formData.get("username"),
-    password: formData.get("password"),
-  });
-  if (!input.success) {
-    return { ok: false as const, error: "VALIDATION_ERROR" as const, issues: input.error.issues };
-  }
-
-  const existing = await prisma.user.findFirst({
-    where: { OR: [{ email: input.data.email }, { username: input.data.username }] },
-    select: { id: true },
-  });
-  if (existing) return { ok: false as const, error: "EMAIL_OR_USERNAME_TAKEN" as const };
-
-  const passwordHash = await hashPassword(input.data.password);
-
-  const user = await prisma.user.create({
-    data: { email: input.data.email, username: input.data.username, passwordHash, role: "USER" },
-    select: { id: true, role: true },
-  });
-
-  await setSessionCookie(user.id, user.role);
-
-  const returnUrl = formData.get("returnUrl");
-  const path = typeof returnUrl === "string" && returnUrl.startsWith("/") && !returnUrl.startsWith("//")
-    ? returnUrl
-    : "/equipments";
-  redirect(path);
-}
-
 
 const LoginSchema = z.object({
   identifier: z.string().min(1).max(255),
@@ -97,18 +54,6 @@ export async function loginFormAction(formData: FormData) {
       ? `&returnUrl=${encodeURIComponent(returnUrl)}`
       : "";
     redirect(`/login?error=${encodeURIComponent(result.error)}${q}`);
-  }
-}
-
-/** Form 전용: (formData)만 받아서 에러 시 redirect. Client에서 useActionState 대신 사용 */
-export async function signupFormAction(formData: FormData) {
-  const result = await signupAction(null, formData);
-  if (!result.ok) {
-    const returnUrl = formData.get("returnUrl");
-    const q = typeof returnUrl === "string" && returnUrl.startsWith("/")
-      ? `&returnUrl=${encodeURIComponent(returnUrl)}`
-      : "";
-    redirect(`/signup?error=${encodeURIComponent(result.error)}${q}`);
   }
 }
 

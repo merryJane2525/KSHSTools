@@ -3,7 +3,6 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useFormStatus } from "react-dom";
-import Link from "next/link";
 import { loginFormAction } from "@/app/actions/auth";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 import { LoadingSpinner } from "@/app/_components/LoadingSpinner";
@@ -70,7 +69,7 @@ function LoginForm() {
             <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">로그인</h1>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
               {returnUrl
-                ? "해당 콘텐츠를 보려면 로그인하거나 회원가입해 주세요."
+                ? "해당 콘텐츠를 보려면 로그인해 주세요."
                 : "이메일 또는 username(일괄 등록 계정은 학번+이름)으로 로그인합니다."}
             </p>
 
@@ -101,16 +100,6 @@ function LoginForm() {
 
             <LoginSubmitButton />
           </form>
-
-            <div className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-              계정이 없나요?{" "}
-              <Link
-                className="font-medium text-zinc-900 dark:text-zinc-100 underline"
-                href={returnUrl ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}` : "/signup"}
-              >
-                회원가입
-              </Link>
-            </div>
           </div>
         </AnimateOnScroll>
       </div>

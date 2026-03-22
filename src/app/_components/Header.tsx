@@ -74,20 +74,12 @@ export async function Header() {
               </form>
             </>
           ) : (
-            <>
-              <Link
-                className="touch-manipulation shrink-0 rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm font-bold text-primary hover:bg-primary/5 sm:px-4 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
-                href="/login"
-              >
-                로그인
-              </Link>
-              <Link
-                className="touch-manipulation shrink-0 rounded-lg bg-primary px-3 py-2 text-sm font-bold text-white hover:opacity-90 sm:px-4 dark:bg-primary dark:text-[#15191d]"
-                href="/signup"
-              >
-                회원가입
-              </Link>
-            </>
+            <Link
+              className="touch-manipulation shrink-0 rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm font-bold text-primary hover:bg-primary/5 sm:px-4 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
+              href="/login"
+            >
+              로그인
+            </Link>
           )}
         </div>
       </div>

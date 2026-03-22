@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifySessionToken, SESSION_COOKIE } from "@/lib/auth-session";
 
-/** 비로그인 사용자 허용 경로: 매뉴얼, 검색, 로그인/회원가입, 홈, 정적/API */
+/** 비로그인 사용자 허용 경로: 매뉴얼, 검색, 로그인(/signup은 로그인으로 리다이렉트), 홈, 정적/API */
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/" || pathname === "/login" || pathname === "/signup") return true;
   if (pathname === "/about") return true;
