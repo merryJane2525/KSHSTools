@@ -17,6 +17,35 @@ export function compactEquipmentLabel(s: string): string {
 }
 
 /**
+ * 홈 표에 쓰는 표시명과 DB `Equipment.name`이 다를 때, 먼저 찾아볼 이름 후보.
+ * (첫 번째로 lookup에 성공한 slug를 사용)
+ */
+const HOME_LABEL_NAME_ALTERNATES: [string, readonly string[]][] = [
+  ["IR", ["FT-IR"]],
+  ["열화상 카메라", ["열화상카메라"]],
+  ["뇌파 측정기", ["뇌파측정기"]],
+  ["UV-vis 분광광도계", ["UV-vis"]],
+  ["전기영동", ["전기영동장치"]],
+  ["편광 현미경 및 박편", ["Polarizing Microscope", "PolarizingMicroscope"]],
+  ["서버 컴퓨터", ["서버컴퓨터"]],
+];
+
+function buildHomeLabelAliasMap(): Map<string, readonly string[]> {
+  const m = new Map<string, readonly string[]>();
+  for (const [label, alts] of HOME_LABEL_NAME_ALTERNATES) {
+    m.set(normalizeEquipmentLabel(label), alts);
+    m.set(compactEquipmentLabel(label), alts);
+  }
+  return m;
+}
+
+let homeLabelAliasMap: Map<string, readonly string[]> | null = null;
+function getHomeLabelAliasMap(): Map<string, readonly string[]> {
+  if (!homeLabelAliasMap) homeLabelAliasMap = buildHomeLabelAliasMap();
+  return homeLabelAliasMap;
+}
+
+/**
  * 홈에서 쓰는 표시 라벨 → 상세 페이지 slug.
  * DB `name`·`slug`에서 여러 키를 등록해 부분 불일치를 흡수합니다.
  */
@@ -70,6 +99,17 @@ export function lookupEquipmentSlug(
     const s = lookupMap.get(c);
     if (s) return s;
   }
+
+  const aliasMap = getHomeLabelAliasMap();
+  const aliasAlts =
+    aliasMap.get(normalizeEquipmentLabel(label)) ?? aliasMap.get(compactEquipmentLabel(label));
+  if (aliasAlts) {
+    for (const altName of aliasAlts) {
+      const s = lookupEquipmentSlug(altName, lookupMap, undefined);
+      if (s) return s;
+    }
+  }
+
   if (!equipments?.length) return undefined;
   const hits = equipments.filter((eq) => matchesLoosely(eq.name, label));
   if (hits.length === 1) return hits[0].slug;
