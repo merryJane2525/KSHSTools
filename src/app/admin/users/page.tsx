@@ -19,14 +19,15 @@ type UserListItem = {
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<{ q?: string }> | { q?: string };
 }) {
   const me = await getCurrentUser();
   if (!me || me.role !== "ADMIN") {
     redirect("/");
   }
 
-  const q = (searchParams.q ?? "").trim();
+  const resolved = await Promise.resolve(searchParams);
+  const q = (resolved.q ?? "").trim();
 
   const where: Prisma.UserWhereInput = {};
   if (q) {
@@ -83,9 +84,7 @@ export default async function AdminUsersPage({
         <StudentCsvImport />
       </AnimateOnScroll>
 
-      <AnimateOnScroll>
-        <UserManagementTable users={users} currentUserId={me.id} />
-      </AnimateOnScroll>
+      <UserManagementTable users={users} currentUserId={me.id} />
     </div>
   );
 }

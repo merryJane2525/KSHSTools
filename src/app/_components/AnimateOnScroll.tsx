@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, type ReactNode } from "react";
+import { useRef, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 
 type AnimateOnScrollProps = {
   children: ReactNode;
@@ -23,6 +23,18 @@ export function AnimateOnScroll({
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
+  /** IO가 즉시 콜백을 주지 않는 환경(일부 모바일/레이아웃)에서도 이미 보이는 블록은 바로 표시 */
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const vh = typeof window !== "undefined" ? window.innerHeight : 0;
+    if (vh <= 0) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.top < vh && rect.bottom > 0) {
+      setVisible(true);
+    }
+  }, []);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -31,7 +43,7 @@ export function AnimateOnScroll({
       (entries) => {
         if (entries[0]?.isIntersecting) setVisible(true);
       },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.05, rootMargin: "0px 0px 0px 0px" }
     );
 
     observer.observe(el);
