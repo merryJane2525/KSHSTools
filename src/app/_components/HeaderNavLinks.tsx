@@ -13,24 +13,20 @@ const linkClass =
 export function HeaderNavLinks({ user }: { user: NavUser }) {
   return (
     <>
-      {user && (
-        <>
-          <Link className={linkClass} href="/community">
-            커뮤니티
-          </Link>
-          <Link className={linkClass} href="/equipments">
-            기자재
-          </Link>
-        </>
-      )}
+      <Link className={linkClass} href="/community">
+        커뮤니티
+      </Link>
+      <Link className={linkClass} href="/equipments">
+        기자재
+      </Link>
+      <Link className={linkClass} href="/reservations">
+        예약
+      </Link>
       <Link className={`${linkClass} lg:hidden`} href="/search">
         검색
       </Link>
       {user && (
         <>
-          <Link className={linkClass} href="/reservations">
-            예약
-          </Link>
           <Link className={linkClass} href="/notifications">
             알림
           </Link>

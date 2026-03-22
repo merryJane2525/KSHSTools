@@ -1,6 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { createCommentFormAction } from "@/app/actions/posts";
 
@@ -17,9 +18,27 @@ function CommentSubmitButton() {
   );
 }
 
-export function CommentForm({ postId }: { postId: string }) {
+export function CommentForm({ postId, canComment }: { postId: string; canComment: boolean }) {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const error = searchParams.get("comment_error");
+
+  if (!canComment) {
+    return (
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          댓글을 작성하려면{" "}
+          <Link
+            href={`/login?returnUrl=${encodeURIComponent(pathname)}`}
+            className="font-medium text-zinc-900 underline dark:text-zinc-100"
+          >
+            로그인
+          </Link>
+          이 필요합니다.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm">

@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { buildEquipmentLookupMap } from "@/lib/home-equipment-resolve";
 import { AnimateOnScroll } from "./_components/AnimateOnScroll";
 
 const HomeBelowFold = dynamic(
@@ -42,9 +43,7 @@ const getCachedEquipments = unstable_cache(
 
 export default async function Home() {
   const equipments = (await getCachedEquipments()) as EquipmentSlugItem[];
-  const equipmentSlugMap = new Map(
-    equipments.map((eq: EquipmentSlugItem) => [eq.name.toLowerCase(), eq.slug])
-  );
+  const equipmentSlugMap = buildEquipmentLookupMap(equipments);
 
   const youtubeVideoId = "wZe2uhh0zhY";
   const embedParams = "autoplay=1&mute=1&loop=1&playlist=" + youtubeVideoId + "&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1";
@@ -99,7 +98,7 @@ export default async function Home() {
       </div>
 
       {/* 일반 배경 섹션: 목록 + 대표 장비 (영상 아래) — 별도 청크로 로드해 초기 JS 감소 */}
-      <HomeBelowFold equipmentSlugMap={equipmentSlugMap} />
+      <HomeBelowFold equipmentSlugMap={equipmentSlugMap} equipments={equipments} />
     </>
   );
 }

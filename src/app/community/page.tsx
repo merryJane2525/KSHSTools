@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/date";
@@ -49,11 +48,7 @@ export default async function CommunityPage({
 }: {
   searchParams: CommunitySearchParams;
 }) {
-  // 로그인 필수: 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
   const me = await getCurrentUser();
-  if (!me) {
-    redirect("/login");
-  }
 
   const q = (searchParams.q ?? "").trim();
   const equipmentId = searchParams.equipmentId ?? "";
@@ -116,7 +111,7 @@ export default async function CommunityPage({
             </p>
           </div>
           <Link
-            href="/posts/new"
+            href={me ? "/posts/new" : `/login?returnUrl=${encodeURIComponent("/posts/new")}`}
             className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             질문 작성하기
@@ -229,7 +224,7 @@ export default async function CommunityPage({
                   </div>
                 </Link>
                 {/* ADMIN 전용 빠른 관리 기능 */}
-                {me.role === "ADMIN" && (
+                {me?.role === "ADMIN" && (
                   <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700">
                     <PostAdminQuickActions postId={p.id} currentStatus={p.status} />
                   </div>

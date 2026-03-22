@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/date";
@@ -36,7 +36,6 @@ export default async function PostDetailPage({
   params: Promise<{ id: string }> | { id: string };
 }) {
   const me = await getCurrentUser();
-  if (!me) redirect("/login");
 
   // Next.js 15+ 호환: params가 Promise일 수 있음
   const resolvedParams = await Promise.resolve(params);
@@ -110,6 +109,14 @@ export default async function PostDetailPage({
     imageUrls: imageUrlsArray,
   };
 
+  const operators = me
+    ? await prisma.user.findMany({
+        where: { role: "OPERATOR", status: "ACTIVE" },
+        orderBy: { username: "asc" },
+        select: { id: true, username: true },
+      })
+    : [];
+
   return (
     <div className="space-y-6">
       <AnimateOnScroll>
@@ -132,7 +139,7 @@ export default async function PostDetailPage({
 
       {/* 본문 + 담당 오퍼레이터 박스 */}
       <AnimateOnScroll>
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className={`grid gap-4 ${me ? "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : ""}`}>
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-4">
           <div className="whitespace-pre-wrap text-sm leading-7 text-zinc-900 dark:text-zinc-100">{post.body}</div>
 
@@ -162,29 +169,22 @@ export default async function PostDetailPage({
           )}
         </div>
 
-        <div className="space-y-4">
-          <PostAssignmentsManager
-            postId={post.id}
-            currentUserId={me.id}
-            currentUserRole={me.role}
-            postAuthorId={post.author.id}
-            assignments={post.assignments}
-            operators={
-              // 간단히: 모든 OPERATOR 유저를 선택지로 제공
-              await prisma.user
-                .findMany({
-                  where: { role: "OPERATOR", status: "ACTIVE" },
-                  orderBy: { username: "asc" },
-                  select: { id: true, username: true },
-                })
-            }
-          />
+        {me ? (
+          <div className="space-y-4">
+            <PostAssignmentsManager
+              postId={post.id}
+              currentUserId={me.id}
+              currentUserRole={me.role}
+              postAuthorId={post.author.id}
+              assignments={post.assignments}
+              operators={operators}
+            />
 
-          {/* ADMIN 전용 관리 기능 */}
-          {me.role === "ADMIN" && (
-            <PostAdminActions postId={post.id} currentStatus={post.status} />
-          )}
-        </div>
+            {me.role === "ADMIN" && (
+              <PostAdminActions postId={post.id} currentStatus={post.status} />
+            )}
+          </div>
+        ) : null}
       </div>
       </AnimateOnScroll>
 
@@ -192,7 +192,7 @@ export default async function PostDetailPage({
         <div className="space-y-3">
           <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">댓글 ({post.comments.length})</div>
 
-          <CommentForm postId={post.id} />
+          <CommentForm postId={post.id} canComment={!!me} />
 
           <div className="space-y-3">
           {post.comments.map((c) => (

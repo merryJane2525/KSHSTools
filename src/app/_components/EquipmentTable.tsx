@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { lookupEquipmentSlug } from "@/lib/home-equipment-resolve";
 
 type EquipmentTableProps = {
   equipmentSlugMap: Map<string, string>;
+  equipments: Array<{ name: string; slug: string }>;
 };
 
 const EQUIPMENT_LIST = [
@@ -30,12 +32,12 @@ const EQUIPMENT_LIST = [
   "서버컴퓨터",
 ];
 
-export function EquipmentTable({ equipmentSlugMap }: EquipmentTableProps) {
+export function EquipmentTable({ equipmentSlugMap, equipments }: EquipmentTableProps) {
   return (
     <div className="bg-white dark:bg-[#15191d] rounded-2xl border border-primary/10 dark:border-primary/20 shadow-sm overflow-hidden">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-primary/10 dark:bg-primary/20">
         {EQUIPMENT_LIST.map((equipment, index) => {
-          const slug = equipmentSlugMap.get(equipment.toLowerCase());
+          const slug = lookupEquipmentSlug(equipment, equipmentSlugMap, equipments);
           const cellContent = slug ? (
             <Link
               href={`/equipments/${slug}`}

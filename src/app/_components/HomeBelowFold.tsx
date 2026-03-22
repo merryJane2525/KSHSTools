@@ -4,9 +4,10 @@ import { AnimateOnScroll } from "./AnimateOnScroll";
 
 type HomeBelowFoldProps = {
   equipmentSlugMap: Map<string, string>;
+  equipments: Array<{ id: string; name: string; slug: string }>;
 };
 
-export function HomeBelowFold({ equipmentSlugMap }: HomeBelowFoldProps) {
+export function HomeBelowFold({ equipmentSlugMap, equipments }: HomeBelowFoldProps) {
   return (
     <div className="space-y-12 py-12">
       <AnimateOnScroll className="space-y-4 flex flex-col items-center">
@@ -14,7 +15,7 @@ export function HomeBelowFold({ equipmentSlugMap }: HomeBelowFoldProps) {
           심화기자재 목록
         </h2>
         <div className="w-full max-w-2xl rounded-xl border border-primary/10 bg-white dark:bg-[#15191d] p-5 shadow-sm hover:border-primary/20 hover:shadow-md transition-all dark:border-primary/20">
-          <EquipmentTable equipmentSlugMap={equipmentSlugMap} />
+          <EquipmentTable equipmentSlugMap={equipmentSlugMap} equipments={equipments} />
         </div>
       </AnimateOnScroll>
 
@@ -23,7 +24,7 @@ export function HomeBelowFold({ equipmentSlugMap }: HomeBelowFoldProps) {
           대표 장비
         </h2>
         <div className="rounded-xl border border-primary/10 bg-white dark:bg-[#15191d] p-5 shadow-sm hover:border-primary/20 hover:shadow-md transition-all dark:border-primary/20">
-          <FeaturedEquipments equipmentSlugMap={equipmentSlugMap} />
+          <FeaturedEquipments equipmentSlugMap={equipmentSlugMap} equipments={equipments} />
         </div>
       </AnimateOnScroll>
     </div>

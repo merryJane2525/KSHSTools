@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -37,12 +36,21 @@ export default async function ReservationsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-primary/50">가나다순</span>
-            <Link
-              href="/reservations/my"
-              className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
-            >
-              내 예약 목록
-            </Link>
+            {me ? (
+              <Link
+                href="/reservations/my"
+                className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
+              >
+                내 예약 목록
+              </Link>
+            ) : (
+              <Link
+                href={`/login?returnUrl=${encodeURIComponent("/reservations/my")}`}
+                className="rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
+              >
+                로그인 후 내 예약
+              </Link>
+            )}
           </div>
         </div>
       </AnimateOnScroll>

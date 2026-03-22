@@ -54,12 +54,15 @@ export function EquipmentReservationDetail({
   equipmentDescription,
   reservations,
   imagePath,
+  isLoggedIn = false,
 }: {
   equipmentSlug: string;
   equipmentName: string;
   equipmentDescription: string | null;
   reservations: ReservationForCalendar[];
   imagePath: string | null;
+  /** 로그인 시에만 「내 예약 목록」으로 바로 이동, 비로그인 시 로그인 페이지로 안내 */
+  isLoggedIn?: boolean;
 }) {
   const todayKst = useMemo(() => toYMD(new Date()), []);
   const [viewDate, setViewDate] = useState(() => new Date());
@@ -140,13 +143,17 @@ export function EquipmentReservationDetail({
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
-            href={`/reservations/${equipmentSlug}/new?date=${selectedDate ?? todayKst}`}
+            href={
+              isLoggedIn
+                ? `/reservations/${equipmentSlug}/new?date=${selectedDate ?? todayKst}`
+                : `/login?returnUrl=${encodeURIComponent(`/reservations/${equipmentSlug}/new?date=${selectedDate ?? todayKst}`)}`
+            }
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90"
           >
             예약 신청하기
           </Link>
           <Link
-            href="/reservations/my"
+            href={isLoggedIn ? "/reservations/my" : `/login?returnUrl=${encodeURIComponent("/reservations/my")}`}
             className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 dark:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20"
           >
             내 예약 목록

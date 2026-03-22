@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
@@ -24,8 +24,6 @@ type ReservationRow = {
 
 export default async function ReservationDetailPage({ params, searchParams }: PageProps) {
   const me = await getCurrentUser();
-  if (!me) redirect("/login");
-
   const { slug } = await params;
   const resolvedSearch = searchParams ? await Promise.resolve(searchParams) : {};
   const reservationSuccess = resolvedSearch.reservation_success;
@@ -94,6 +92,7 @@ export default async function ReservationDetailPage({ params, searchParams }: Pa
           equipmentDescription={equipment.description}
           reservations={reservationList}
           imagePath={imagePath}
+          isLoggedIn={!!me}
         />
       </AnimateOnScroll>
     </div>

@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { lookupEquipmentSlug } from "@/lib/home-equipment-resolve";
 import { FeaturedEquipmentImage } from "./FeaturedEquipmentImage";
 
 type FeaturedEquipmentsProps = {
   equipmentSlugMap: Map<string, string>;
+  equipments: Array<{ name: string; slug: string }>;
 };
 
 /**
@@ -42,12 +44,12 @@ const FEATURED_EQUIPMENTS = [
   },
 ];
 
-export function FeaturedEquipments({ equipmentSlugMap }: FeaturedEquipmentsProps) {
+export function FeaturedEquipments({ equipmentSlugMap, equipments }: FeaturedEquipmentsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {FEATURED_EQUIPMENTS.map((equipment) => {
         // DB slug 우선, 없으면 코드 상 slug 사용 (manual 페이지가 알려진 slug면 404 없이 표시)
-        const slugFromMap = equipmentSlugMap.get(equipment.name.toLowerCase());
+        const slugFromMap = lookupEquipmentSlug(equipment.name, equipmentSlugMap, equipments);
         const slug = slugFromMap ?? equipment.slug ?? null;
         const manualLink = slug ? `/equipments/${slug}/manual` : null;
 
