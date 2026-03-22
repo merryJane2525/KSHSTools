@@ -5,6 +5,24 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { hashPassword } from "@/lib/password";
+import {
+  parseStudentCsv,
+  usernameFromStudentAndName,
+  initialPasswordFromStudentAndName,
+  utf8ByteLength,
+  MAX_STUDENT_CSV_ROWS,
+} from "@/lib/student-csv-import";
+
+export type ImportStudentsCsvResult =
+  | {
+      ok: true;
+      created: number;
+      skipped: number;
+      skippedDetails: { line: number; reason: string }[];
+      parseErrors: { line: number; message: string }[];
+    }
+  | { ok: false; error: string };
 
 const PromoteOperatorSchema = z.object({
   userId: z.string().uuid(),
@@ -305,4 +323,131 @@ export async function revokeOperatorFormAction(formData: FormData) {
 export async function deleteUserFormAction(formData: FormData) {
   const result = await deleteUserAction(null, formData);
   if (!result.ok) redirect(`/admin/users?user_error=${encodeURIComponent(result.error)}`);
+}
+
+/**
+ * ADMIN: CSV(학번, 이름)로 학생 계정 일괄 생성.
+ * username은 학번+이름, 비밀번호는 학번+이름+!, 이메일은 null(로그인 후 계정에서 설정).
+ */
+export async function importStudentsCsvAction(
+  _prev: ImportStudentsCsvResult | null,
+  formData: FormData,
+): Promise<ImportStudentsCsvResult> {
+  const me = await requireUser();
+  if (me.role !== "ADMIN") {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+
+  const file = formData.get("csv");
+  if (!(file instanceof File)) {
+    return { ok: false, error: "NO_FILE" };
+  }
+  if (file.size === 0) {
+    return { ok: false, error: "EMPTY_FILE" };
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    return { ok: false, error: "FILE_TOO_LARGE" };
+  }
+
+  let text: string;
+  try {
+    text = await file.text();
+  } catch {
+    return { ok: false, error: "READ_FAILED" };
+  }
+
+  const { rows, parseErrors } = parseStudentCsv(text);
+  if (rows.length > MAX_STUDENT_CSV_ROWS) {
+    return { ok: false, error: "TOO_MANY_ROWS" };
+  }
+
+  const seenInFile = new Set<string>();
+  const skippedDetails: { line: number; reason: string }[] = [];
+  let created = 0;
+  let skipped = 0;
+
+  for (const row of rows) {
+    if (seenInFile.has(row.studentNumber)) {
+      skipped++;
+      skippedDetails.push({ line: row.line, reason: "파일 내 중복 학번" });
+      continue;
+    }
+    seenInFile.add(row.studentNumber);
+
+    const existingByNumber = await prisma.user.findFirst({
+      where: { studentNumber: row.studentNumber },
+      select: { id: true },
+    });
+    if (existingByNumber) {
+      skipped++;
+      skippedDetails.push({ line: row.line, reason: "이미 등록된 학번" });
+      continue;
+    }
+
+    const password = initialPasswordFromStudentAndName(row.studentNumber, row.name);
+    if (utf8ByteLength(password) > 72) {
+      skipped++;
+      skippedDetails.push({
+        line: row.line,
+        reason: "비밀번호(학번+이름+!)이 bcrypt 최대 길이(72바이트)를 초과합니다",
+      });
+      continue;
+    }
+
+    const baseUsername = usernameFromStudentAndName(row.studentNumber, row.name);
+    let username = baseUsername;
+    let suffix = 0;
+    while (true) {
+      const exists = await prisma.user.findUnique({
+        where: { username },
+        select: { id: true },
+      });
+      if (!exists) break;
+      suffix++;
+      username = `${baseUsername}_${suffix}`;
+    }
+
+    const passwordHash = await hashPassword(password);
+
+    try {
+      await prisma.user.create({
+        data: {
+          email: null,
+          username,
+          passwordHash,
+          studentNumber: row.studentNumber,
+          studentName: row.name,
+          role: "USER",
+        },
+      });
+      created++;
+    } catch {
+      skipped++;
+      skippedDetails.push({ line: row.line, reason: "저장 실패(중복 등)" });
+    }
+  }
+
+  if (created > 0) {
+    try {
+      await prisma.auditLog.create({
+        data: {
+          actorId: me.id,
+          action: "BULK_IMPORT_STUDENTS",
+          targetType: "User",
+          meta: { created, skipped, parseErrorCount: parseErrors.length },
+        },
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  revalidatePath("/admin/users");
+  return {
+    ok: true,
+    created,
+    skipped,
+    skippedDetails,
+    parseErrors,
+  };
 }

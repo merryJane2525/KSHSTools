@@ -13,7 +13,7 @@ type AdminPostItem = {
   createdAt: Date;
   deletedAt: Date | null;
   equipment: { id: string; name: string; slug: string };
-  author: { id: string; username: string; email: string };
+  author: { id: string; username: string; email: string | null };
   _count: { comments: number };
 };
 

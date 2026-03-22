@@ -34,7 +34,9 @@ function LoginForm() {
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">로그인</h1>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              {returnUrl ? "해당 콘텐츠를 보려면 로그인하거나 회원가입해 주세요." : "이메일 또는 username으로 로그인합니다."}
+              {returnUrl
+                ? "해당 콘텐츠를 보려면 로그인하거나 회원가입해 주세요."
+                : "이메일 또는 username(일괄 등록 계정은 학번+이름)으로 로그인합니다."}
             </p>
 
           {error ? (

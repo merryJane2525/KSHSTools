@@ -88,10 +88,11 @@ enum SearchDocumentType {
 
 model User {
   id              String     @id @default(uuid())
-  email           String     @unique
+  email           String?    @unique // null 허용: CSV 일괄 등록 후 계정에서 설정
   passwordHash    String
   username        String     @unique
   studentNumber   String?    // 학번 (예약 신청 시 표시/미리채움)
+  studentName     String?    // 이름 (CSV 일괄 등록 등)
   role            UserRole   @default(USER)
   status          UserStatus @default(ACTIVE)
   emailVerifiedAt DateTime?

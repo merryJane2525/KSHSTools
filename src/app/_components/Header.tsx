@@ -46,6 +46,19 @@ export async function Header() {
                 알림
               </Link>
             )}
+            {user && !user.email && (
+              <Link
+                className="whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 transition-colors sm:px-3"
+                href="/account"
+              >
+                이메일 등록
+              </Link>
+            )}
+            {user && user.email && (
+              <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/account">
+                계정
+              </Link>
+            )}
             {user && (user.role === "OPERATOR" || user.role === "ADMIN") && (
               <Link className="whitespace-nowrap rounded-lg px-2 py-2 text-sm text-primary/60 hover:bg-primary/5 hover:text-primary transition-colors sm:px-3" href="/operator">
                 오퍼레이터

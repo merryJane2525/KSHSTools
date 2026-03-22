@@ -12,7 +12,7 @@ type AdminPostItem = {
   createdAt: Date;
   deletedAt: Date | null;
   equipment: { id: string; name: string; slug: string };
-  author: { id: string; username: string; email: string };
+  author: { id: string; username: string; email: string | null };
   _count: { comments: number };
 };
 
@@ -72,7 +72,7 @@ function PostAdminRow({ post }: { post: AdminPostItem }) {
       </td>
       <td className="px-4 py-3">
         <div className="text-zinc-900 dark:text-zinc-100">{post.author.username}</div>
-        <div className="text-xs text-zinc-500 dark:text-zinc-400">{post.author.email}</div>
+        <div className="text-xs text-zinc-500 dark:text-zinc-400">{post.author.email ?? "—"}</div>
       </td>
       <td className="px-4 py-3">
         <Link

@@ -1,14 +1,16 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { UserManagementTable } from "./ui";
+import { StudentCsvImport, UserManagementTable } from "./ui";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 import type { Prisma } from "@prisma/client";
 
 type UserListItem = {
   id: string;
-  email: string;
+  email: string | null;
   username: string;
+  studentNumber: string | null;
+  studentName: string | null;
   role: string;
   status: string;
   createdAt: Date;
@@ -31,6 +33,8 @@ export default async function AdminUsersPage({
     where.OR = [
       { email: { contains: q, mode: "insensitive" } },
       { username: { contains: q, mode: "insensitive" } },
+      { studentNumber: { contains: q, mode: "insensitive" } },
+      { studentName: { contains: q, mode: "insensitive" } },
     ];
   }
 
@@ -41,6 +45,8 @@ export default async function AdminUsersPage({
       id: true,
       email: true,
       username: true,
+      studentNumber: true,
+      studentName: true,
       role: true,
       status: true,
       createdAt: true,
@@ -67,10 +73,14 @@ export default async function AdminUsersPage({
             type="text"
             name="q"
             defaultValue={q}
-            placeholder="이메일 또는 username으로 검색..."
+            placeholder="이메일, username, 학번, 이름으로 검색..."
             className="w-full rounded-xl border border-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 px-3 py-2 text-sm outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
           />
         </form>
+      </AnimateOnScroll>
+
+      <AnimateOnScroll>
+        <StudentCsvImport />
       </AnimateOnScroll>
 
       <AnimateOnScroll>
