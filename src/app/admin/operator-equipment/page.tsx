@@ -59,9 +59,9 @@ export default async function AdminOperatorEquipmentPage({ searchParams }: PageP
         <div>
           <h1 className="text-xl font-semibold tracking-tight">기자재별 오퍼레이터</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            아래에서 기자재(또는 동일 이름으로 나뉜 묶음)를 고른 뒤 담당 오퍼레이터를 지정합니다. 묶음을 선택하면 한 번에 같은
-            구성이 묶음 안의 모든 행에 적용됩니다. 체크를 모두 해제하고 저장하면 해당 항목은 전체 오퍼레이터 허용 규칙으로
-            돌아갑니다.
+            동일 이름으로 DB에 여러 행이 있거나, 예약만 A·B·… 단위로 나뉘는 기자재는 모두 <strong className="font-medium text-zinc-800 dark:text-zinc-200">일괄 선택</strong>
+            에서만 다룹니다. 단일 행·단일 예약만 있는 기자재만 목록에 이름만 표시됩니다. 체크를 모두 해제하고 저장하면 해당
+            항목은 전체 오퍼레이터 허용 규칙으로 돌아갑니다.
           </p>
         </div>
       </AnimateOnScroll>

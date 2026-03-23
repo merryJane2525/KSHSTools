@@ -78,6 +78,10 @@ export function intersectionOperatorIds(
 export type UnifiedAssignmentTarget = {
   /** `g:groupKey` 또는 `e:equipmentUuid` */
   key: string;
+  /**
+   * `group`: DB 행이 여러 개인 묶음, 또는 예약 단위만 여러 개인 1행 기자재(일괄 지정 UI).
+   * `single`: 단일 행·단일(또는 무단위) 예약인 일반 기자재만.
+   */
   kind: "group" | "single";
   sortLabel: string;
   optionLabel: string;
@@ -117,16 +121,24 @@ export function buildUnifiedAssignmentTargets(
   for (const eq of equipments) {
     if (inGroup.has(eq.id)) continue;
     const labels = getEquipmentUnitLabels(eq.name);
-    const description =
-      labels.length > 1
-        ? `예약 시 ${labels.join(", ")} 등 단위로 구분됩니다. 오퍼 지정은 이 기자재 한 번으로 모든 단위에 공통 적용됩니다.`
-        : null;
+    /** 예약만 A·B·… 로 나뉘고 DB는 1행인 경우 → 개별(노란 안내)로 두지 않고 묶음(일괄) UI만 사용 */
+    if (labels.length > 1) {
+      targets.push({
+        key: `e:${eq.id}`,
+        kind: "group",
+        sortLabel: eq.name,
+        optionLabel: `${eq.name} (예약 단위 ${labels.join(", ")} · 일괄)`,
+        description: `예약 시 ${labels.join(", ")} 등 단위로 구분됩니다. 오퍼레이터 지정은 이 항목 한 번으로 모든 단위에 적용됩니다.`,
+        equipmentIds: [eq.id],
+      });
+      continue;
+    }
     targets.push({
       key: `e:${eq.id}`,
       kind: "single",
       sortLabel: eq.name,
       optionLabel: eq.name,
-      description,
+      description: null,
       equipmentIds: [eq.id],
     });
   }
