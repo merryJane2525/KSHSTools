@@ -3,6 +3,8 @@
  * 예: "뇌파측정기 A", "뇌파측정기 B" → 같은 접두 이름으로 그룹 (2건 이상일 때만 묶음으로 노출)
  */
 
+import { getEquipmentUnitLabels } from "@/lib/equipment-units";
+
 export type EquipmentBulkGroup = {
   /** 그룹 식별용 (정렬·키) */
   groupKey: string;
@@ -61,4 +63,90 @@ export function buildEquipmentBulkGroups(equipments: { id: string; name: string 
 
   out.sort((a, b) => a.displayLabel.localeCompare(b.displayLabel, "ko"));
   return out;
+}
+
+/** 여러 equipmentId에 대해 공통으로 지정된 operatorId (교집합) */
+export function intersectionOperatorIds(
+  equipmentIds: string[],
+  operatorLinksByEquipment: Record<string, string[]>,
+): string[] {
+  if (equipmentIds.length === 0) return [];
+  const sets = equipmentIds.map((id) => new Set(operatorLinksByEquipment[id] ?? []));
+  return [...sets[0]].filter((opId) => sets.every((s) => s.has(opId)));
+}
+
+export type UnifiedAssignmentTarget = {
+  /** `g:groupKey` 또는 `e:equipmentUuid` */
+  key: string;
+  kind: "group" | "single";
+  sortLabel: string;
+  optionLabel: string;
+  /** 선택 시 표시할 보조 설명 */
+  description: string | null;
+  equipmentIds: string[];
+};
+
+/**
+ * 묶음(동일 접두 2건 이상) + 묶음에 속하지 않은 개별 기자재를 한 목록으로 합칩니다.
+ */
+export function buildUnifiedAssignmentTargets(
+  equipments: { id: string; name: string; slug: string }[],
+  bulkGroups: EquipmentBulkGroup[],
+): UnifiedAssignmentTarget[] {
+  const inGroup = new Set<string>();
+  for (const g of bulkGroups) {
+    for (const id of g.equipmentIds) inGroup.add(id);
+  }
+
+  const nameById = new Map(equipments.map((e) => [e.id, e.name] as const));
+
+  const targets: UnifiedAssignmentTarget[] = [];
+
+  for (const g of bulkGroups) {
+    const names = g.equipmentIds.map((id) => nameById.get(id) ?? id).join(", ");
+    targets.push({
+      key: `g:${g.groupKey}`,
+      kind: "group",
+      sortLabel: g.displayLabel,
+      optionLabel: `${g.displayLabel} (동일 이름 · ${g.equipmentIds.length}건 묶음)`,
+      description: `포함 행: ${names}. 묶음 전체에 동일한 오퍼 구성이 적용됩니다.`,
+      equipmentIds: g.equipmentIds,
+    });
+  }
+
+  for (const eq of equipments) {
+    if (inGroup.has(eq.id)) continue;
+    const labels = getEquipmentUnitLabels(eq.name);
+    const description =
+      labels.length > 1
+        ? `예약 시 ${labels.join(", ")} 등 단위로 구분됩니다. 오퍼 지정은 이 기자재 한 번으로 모든 단위에 공통 적용됩니다.`
+        : null;
+    targets.push({
+      key: `e:${eq.id}`,
+      kind: "single",
+      sortLabel: eq.name,
+      optionLabel: eq.name,
+      description,
+      equipmentIds: [eq.id],
+    });
+  }
+
+  targets.sort((a, b) => a.sortLabel.localeCompare(b.sortLabel, "ko"));
+  return targets;
+}
+
+export function resolveAssignmentSelectionKey(
+  selection: string | undefined,
+  legacyEquipmentId: string | undefined,
+  targets: UnifiedAssignmentTarget[],
+): string | null {
+  if (targets.length === 0) return null;
+  if (selection && targets.some((t) => t.key === selection)) {
+    return selection;
+  }
+  if (legacyEquipmentId && /^[0-9a-f-]{36}$/i.test(legacyEquipmentId)) {
+    const k = `e:${legacyEquipmentId}`;
+    if (targets.some((t) => t.key === k)) return k;
+  }
+  return targets[0]?.key ?? null;
 }
