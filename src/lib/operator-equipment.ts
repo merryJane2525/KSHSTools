@@ -29,7 +29,7 @@ export async function getOperatorsForPostEquipment(equipmentId: string): Promise
 
 export type OperatorForReservationPicker = OperatorForPicker & { role: "OPERATOR" | "ADMIN" };
 
-/** 예약 오퍼 지정: ACTIVE OPERATOR·ADMIN. 기자재에 링크가 없으면 전체, 있으면 링크된 사용자만 */
+/** 예약 신청 화면에서 선택 가능한 오퍼 후보(OperatorEquipment 반영). ACTIVE OPERATOR·ADMIN */
 export async function getOperatorsForReservationEquipment(
   equipmentId: string,
 ): Promise<OperatorForReservationPicker[]> {

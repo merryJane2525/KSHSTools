@@ -1,3 +1,7 @@
+/**
+ * 기자재별 대수·구분(A, B, …) 정의.
+ * 예약 시 단위 선택, 관리자 「기자재별 담당 오퍼」일괄 목록 등에서 공통으로 참조합니다.
+ */
 export type EquipmentUnitConfig = {
   /** 장비 개수 */
   count: number;

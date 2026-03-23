@@ -70,7 +70,7 @@ export function OperatorEquipmentForm(props: {
       {active && active.kind === "group" && active.equipmentIds.length > 1 && (
         <div className="rounded-xl border border-zinc-100 bg-zinc-50/80 px-3 py-2 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-400">
           동일 이름으로 나뉜 <strong className="font-medium text-zinc-800 dark:text-zinc-200">여러 DB 행</strong>에 한 번에 같은
-          오퍼 구성이 적용됩니다.
+          담당 오퍼레이터가 연결됩니다.
         </div>
       )}
 
@@ -86,8 +86,8 @@ export function OperatorEquipmentForm(props: {
 
         <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200">담당 오퍼레이터</div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          체크한 사용자만 커뮤니티 담당 지정·예약 시 선택 목록에 나타납니다. 항목을 바꾸면, 해당 항목에 맞는 오퍼가 기본으로
-          체크됩니다.
+          체크한 오퍼레이터만 이 기자재(또는 묶음)에 담당으로 연결됩니다. 다른 화면에서 게시글 담당 지정·예약 시 오퍼 선택에 쓰일
+          후보 목록이 여기에 반영됩니다. 항목을 바꾸면 그에 맞게 기본 체크가 바뀝니다.
         </p>
         <ul className="max-h-[min(60vh,28rem)] space-y-2 overflow-auto rounded-xl border border-zinc-100 dark:border-zinc-800 p-3">
           {props.operators.length === 0 ? (

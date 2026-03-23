@@ -57,11 +57,13 @@ export default async function AdminOperatorEquipmentPage({ searchParams }: PageP
     <div className="space-y-6">
       <AnimateOnScroll>
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">기자재별 오퍼레이터</h1>
+          <h1 className="text-xl font-semibold tracking-tight">기자재별 담당 오퍼레이터</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            동일 이름으로 DB에 여러 행이 있거나, 예약만 A·B·… 단위로 나뉘는 기자재는 모두 <strong className="font-medium text-zinc-800 dark:text-zinc-200">일괄 선택</strong>
-            에서만 다룹니다. 단일 행·단일 예약만 있는 기자재만 목록에 이름만 표시됩니다. 체크를 모두 해제하고 저장하면 해당
-            항목은 전체 오퍼레이터 허용 규칙으로 돌아갑니다.
+            기자재마다 <strong className="font-medium text-zinc-800 dark:text-zinc-200">담당으로 둘 오퍼레이터</strong>를
+            연결합니다. 동일 이름으로 DB에 여러 행이 있거나, A·B 등 여러 대로 구분되는 기종은{" "}
+            <strong className="font-medium text-zinc-800 dark:text-zinc-200">일괄 선택</strong>에서 한 번에 지정합니다. 한
+            대만 해당하는 기자재는 이름만 표시됩니다. 아무에게도 연결하지 않고 저장하면 해당 기자재는 전체 오퍼레이터 허용
+            규칙으로 돌아갑니다.
           </p>
         </div>
       </AnimateOnScroll>

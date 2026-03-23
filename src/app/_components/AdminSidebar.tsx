@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/admin/users", label: "사용자 관리" },
   { href: "/admin/posts", label: "게시글 관리" },
-  { href: "/admin/operator-equipment", label: "기자재별 오퍼레이터" },
+  { href: "/admin/operator-equipment", label: "기자재별 담당 오퍼" },
 ] as const;
 
 export function AdminSidebar() {
