@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
 import { PostAdminTable } from "./ui";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 import type { Prisma } from "@prisma/client";
@@ -34,11 +32,6 @@ export default async function AdminPostsPage({
 }: {
   searchParams: AdminPostsSearchParams;
 }) {
-  const me = await getCurrentUser();
-  if (!me || me.role !== "ADMIN") {
-    redirect("/");
-  }
-
   const q = (searchParams.q ?? "").trim();
   const equipmentId = searchParams.equipmentId ?? "";
   const status = searchParams.status ?? "";

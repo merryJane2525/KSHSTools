@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 export type OperatorPickerOption = {
   id: string;
@@ -25,6 +25,8 @@ export function OperatorSearchPicker({
 }) {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [focused, setFocused] = useState(false);
+  const blurCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,6 +42,9 @@ export function OperatorSearchPicker({
 
   const selected = selectedId ? operators.find((o) => o.id === selectedId) : null;
 
+  /** 입력이 있거나 검색창이 포커스된 경우 전체 목록(또는 필터 결과) 표시 */
+  const showList = !selected && (focused || query.trim().length > 0);
+
   return (
     <div className="space-y-2">
       {label ? <div className="text-sm font-bold text-primary/80">{label}</div> : null}
@@ -52,11 +57,24 @@ export function OperatorSearchPicker({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => {
+              if (blurCloseTimer.current) {
+                clearTimeout(blurCloseTimer.current);
+                blurCloseTimer.current = null;
+              }
+              setFocused(true);
+            }}
+            onBlur={() => {
+              blurCloseTimer.current = setTimeout(() => {
+                setFocused(false);
+                blurCloseTimer.current = null;
+              }, 120);
+            }}
             placeholder={searchPlaceholder}
             autoComplete="off"
             className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-primary focus:ring-1 focus:ring-primary/20 dark:border-primary/20 dark:bg-primary/5"
           />
-          {query.trim() ? (
+          {showList ? (
             <ul className="max-h-48 overflow-auto rounded-lg border border-primary/15 bg-white text-sm dark:border-primary/20 dark:bg-[#15191d]">
               {filtered.length === 0 ? (
                 <li className="px-3 py-2 text-xs text-primary/50">검색 결과가 없습니다.</li>
@@ -66,7 +84,13 @@ export function OperatorSearchPicker({
                     <button
                       type="button"
                       className="w-full px-3 py-2 text-left text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
+                        if (blurCloseTimer.current) {
+                          clearTimeout(blurCloseTimer.current);
+                          blurCloseTimer.current = null;
+                        }
+                        setFocused(false);
                         setSelectedId(op.id);
                         setQuery("");
                       }}
@@ -81,7 +105,7 @@ export function OperatorSearchPicker({
               )}
             </ul>
           ) : (
-            <p className="text-xs text-primary/50">검색어를 입력하면 목록이 표시됩니다.</p>
+            <p className="text-xs text-primary/50">검색창을 누르거나 입력하면 목록이 표시됩니다.</p>
           )}
         </div>
       ) : (

@@ -1,7 +1,4 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 import { OperatorEquipmentForm } from "./ui";
 
@@ -10,9 +7,6 @@ type PageProps = {
 };
 
 export default async function AdminOperatorEquipmentPage({ searchParams }: PageProps) {
-  const me = await getCurrentUser();
-  if (!me || me.role !== "ADMIN") redirect("/");
-
   const resolved = await Promise.resolve(searchParams);
   const selectedId =
     resolved.equipmentId && /^[0-9a-f-]{36}$/i.test(resolved.equipmentId) ? resolved.equipmentId : null;
@@ -40,21 +34,13 @@ export default async function AdminOperatorEquipmentPage({ searchParams }: PageP
   return (
     <div className="space-y-6">
       <AnimateOnScroll>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">기자재별 오퍼레이터</h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              기자재마다 담당 오퍼레이터를 지정합니다. 특정 기자재에 아무도 체크하지 않으면(목록 비우기) 해당 장비는{' '}
-              <strong className="font-medium text-zinc-800 dark:text-zinc-200">모든 오퍼레이터</strong>가 커뮤니티·예약에서
-              선택 가능합니다.
-            </p>
-          </div>
-          <Link
-            href="/admin/users"
-            className="text-sm text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-400"
-          >
-            ← 사용자 관리
-          </Link>
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">기자재별 오퍼레이터</h1>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            기자재마다 담당 오퍼레이터를 지정합니다. 특정 기자재에 아무도 체크하지 않으면(목록 비우기) 해당 장비는{' '}
+            <strong className="font-medium text-zinc-800 dark:text-zinc-200">모든 오퍼레이터</strong>가 커뮤니티·예약에서
+            선택 가능합니다.
+          </p>
         </div>
       </AnimateOnScroll>
 

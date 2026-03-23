@@ -22,9 +22,7 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ q?: string }> | { q?: string };
 }) {
   const me = await getCurrentUser();
-  if (!me || me.role !== "ADMIN") {
-    redirect("/");
-  }
+  if (!me) redirect("/");
 
   const resolved = await Promise.resolve(searchParams);
   const q = (resolved.q ?? "").trim();
