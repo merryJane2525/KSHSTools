@@ -15,8 +15,25 @@ const SHARED_BULK_FAMILIES: ReadonlyArray<{
   { key: "eeg", displayLabel: "뇌파측정기", matchNames: ["뇌파측정기", "뇌파 측정기"] },
   { key: "uvvis", displayLabel: "UV-vis 분광광도계", matchNames: ["UV-vis", "UV-vis 분광광도계"] },
   { key: "pcr", displayLabel: "PCR", matchNames: ["PCR"] },
+  { key: "server", displayLabel: "서버 컴퓨터", matchNames: ["서버컴퓨터", "서버 컴퓨터"] },
 ];
 
+/** 전각 괄호·대시 등으로 접미 패턴이 안 잡히는 경우 방지 */
+function normalizeNameForUnitParsing(name: string): string {
+  return name
+    .replace(/\uFF08/g, "(")
+    .replace(/\uFF09/g, ")")
+    .replace(/[‐‑‒–—−﹣－]/g, "-")
+    .trim()
+    .normalize("NFKC")
+    .replace(/([Ａ-Ｚ])$/u, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * 정확히 등록된 표기와 일치할 때
+ * + 표기가 조금 달라도(공백·붙여쓰기 등) 같은 기종이면 묶음 (뇌파·UV-vis·PCR)
+ */
 function resolveBulkFamilyGroupKey(strippedOrFullName: string): string | null {
   const n = normalizeEquipmentLabel(strippedOrFullName);
   const c = compactEquipmentLabel(strippedOrFullName);
@@ -27,6 +44,15 @@ function resolveBulkFamilyGroupKey(strippedOrFullName: string): string | null {
       }
     }
   }
+  return resolveBulkFamilyGroupKeyLoose(strippedOrFullName);
+}
+
+function resolveBulkFamilyGroupKeyLoose(strippedOrFullName: string): string | null {
+  const c = compactEquipmentLabel(strippedOrFullName);
+  if (c.includes("뇌파") && c.includes("측정")) return "fam:eeg";
+  if (c.includes("uvvis") || (c.includes("uv") && c.includes("vis"))) return "fam:uvvis";
+  if (c === "pcr") return "fam:pcr";
+  if (c.includes("서버") && c.includes("컴퓨터")) return "fam:server";
   return null;
 }
 
@@ -39,18 +65,20 @@ function bulkFamilyDisplayLabel(groupKey: string): string | null {
 
 /** 등록된 패밀리(뇌파·UV-vis·PCR 등)에 속하면 관리 UI용 표시명 */
 function familyDisplayLabelForEquipmentName(eqName: string): string | null {
-  const stripped = stripTrailingUnitSuffix(eqName);
-  const key = resolveBulkFamilyGroupKey(stripped) ?? resolveBulkFamilyGroupKey(eqName);
+  const pre = normalizeNameForUnitParsing(eqName);
+  const stripped = stripTrailingUnitSuffix(pre);
+  const key = resolveBulkFamilyGroupKey(stripped) ?? resolveBulkFamilyGroupKey(pre);
   if (!key) return null;
   return bulkFamilyDisplayLabel(key);
 }
 
 /** 접미 ` A` 제거 후, 알려진 기종 패밀리면 동일 키로 묶음 */
 function groupingKeyForEquipment(eqName: string): string {
-  const stripped = stripTrailingUnitSuffix(eqName);
+  const pre = normalizeNameForUnitParsing(eqName);
+  const stripped = stripTrailingUnitSuffix(pre);
   const fromStripped = resolveBulkFamilyGroupKey(stripped);
   if (fromStripped) return fromStripped;
-  const fromFull = resolveBulkFamilyGroupKey(eqName);
+  const fromFull = resolveBulkFamilyGroupKey(pre);
   if (fromFull) return fromFull;
   return stripped.toLowerCase();
 }
@@ -70,7 +98,7 @@ export type EquipmentBulkGroup = {
  * ` A`, `(B)`, `-A`, `A`(붙여쓰기) 등. 붙여쓰기는 SEM 등 짧은 약어 오탐을 막기 위해 본문 4자 이상일 때만 제거합니다.
  */
 export function stripTrailingUnitSuffix(name: string): string {
-  const t = name.trim();
+  const t = normalizeNameForUnitParsing(name);
   const paren = t.match(/^(.+?)\s*\(([A-Z])\)\s*$/);
   if (paren) return paren[1].trim();
   const spaced = t.match(/^(.+?)\s+([A-Z])$/);
@@ -83,7 +111,7 @@ export function stripTrailingUnitSuffix(name: string): string {
 }
 
 function extractUnitTag(name: string): string {
-  const t = name.trim();
+  const t = normalizeNameForUnitParsing(name);
   const paren = t.match(/^(.+?)\s*\(([A-Z])\)\s*$/);
   if (paren) return paren[2];
   const spaced = t.match(/^(.+?)\s+([A-Z])$/);
