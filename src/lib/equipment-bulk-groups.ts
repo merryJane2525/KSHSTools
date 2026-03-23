@@ -37,6 +37,14 @@ function bulkFamilyDisplayLabel(groupKey: string): string | null {
   return fam?.displayLabel ?? null;
 }
 
+/** 등록된 패밀리(뇌파·UV-vis·PCR 등)에 속하면 관리 UI용 표시명 */
+function familyDisplayLabelForEquipmentName(eqName: string): string | null {
+  const stripped = stripTrailingUnitSuffix(eqName);
+  const key = resolveBulkFamilyGroupKey(stripped) ?? resolveBulkFamilyGroupKey(eqName);
+  if (!key) return null;
+  return bulkFamilyDisplayLabel(key);
+}
+
 /** 접미 ` A` 제거 후, 알려진 기종 패밀리면 동일 키로 묶음 */
 function groupingKeyForEquipment(eqName: string): string {
   const stripped = stripTrailingUnitSuffix(eqName);
@@ -57,13 +65,20 @@ export type EquipmentBulkGroup = {
   unitTags: string[];
 };
 
-/** 이름 끝의 ` A`, ` (B)` 형태 단위 접미사를 제거해 묶음 기준 키로 씁니다. */
+/**
+ * 이름 끝의 단위 접미를 제거해 묶음 기준 키로 씁니다.
+ * ` A`, `(B)`, `-A`, `A`(붙여쓰기) 등. 붙여쓰기는 SEM 등 짧은 약어 오탐을 막기 위해 본문 4자 이상일 때만 제거합니다.
+ */
 export function stripTrailingUnitSuffix(name: string): string {
   const t = name.trim();
   const paren = t.match(/^(.+?)\s*\(([A-Z])\)\s*$/);
   if (paren) return paren[1].trim();
   const spaced = t.match(/^(.+?)\s+([A-Z])$/);
   if (spaced) return spaced[1].trim();
+  const hyphen = t.match(/^(.+)-([A-Z])$/);
+  if (hyphen && hyphen[1].length >= 4) return hyphen[1].trim();
+  const glued = t.match(/^(.+)([A-Z])$/);
+  if (glued && glued[1].length >= 4) return glued[1].trim();
   return t;
 }
 
@@ -73,6 +88,10 @@ function extractUnitTag(name: string): string {
   if (paren) return paren[2];
   const spaced = t.match(/^(.+?)\s+([A-Z])$/);
   if (spaced) return spaced[2];
+  const hyphen = t.match(/^(.+)-([A-Z])$/);
+  if (hyphen && hyphen[1].length >= 4) return hyphen[2];
+  const glued = t.match(/^(.+)([A-Z])$/);
+  if (glued && glued[1].length >= 4) return glued[2];
   return "—";
 }
 
@@ -165,12 +184,20 @@ export function buildUnifiedAssignmentTargets(
     const labels = getEquipmentUnitLabels(eq.name);
     /** DB 1행이지만 A·B 등 여러 대로 구분되는 기종 → 담당 오퍼도 일괄 항목으로만 표시 */
     if (labels.length > 1) {
+      const famLabel = familyDisplayLabelForEquipmentName(eq.name);
+      const sortLabel = famLabel ?? eq.name;
+      const optionLabel = famLabel
+        ? `${famLabel} (일괄)`
+        : `${eq.name} (구분 ${labels.join(", ")} · 일괄)`;
+      const description = famLabel
+        ? `${famLabel}는 여러 대로 구분되는 기종입니다. 담당 오퍼레이터 지정은 이 항목 한 번으로 모든 대에 동일하게 적용됩니다.`
+        : `이 기자재는 ${labels.join(", ")} 등 여러 대로 구분됩니다. 담당 오퍼레이터 지정은 이 항목 한 번으로 모든 구분에 동일하게 적용됩니다.`;
       targets.push({
         key: `e:${eq.id}`,
         kind: "group",
-        sortLabel: eq.name,
-        optionLabel: `${eq.name} (구분 ${labels.join(", ")} · 일괄)`,
-        description: `이 기자재는 ${labels.join(", ")} 등 여러 대로 구분됩니다. 담당 오퍼레이터 지정은 이 항목 한 번으로 모든 구분에 동일하게 적용됩니다.`,
+        sortLabel,
+        optionLabel,
+        description,
         equipmentIds: [eq.id],
       });
       continue;
