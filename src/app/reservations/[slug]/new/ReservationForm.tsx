@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { createReservationFormAction } from "@/app/actions/reservations";
 import { getEquipmentUnitLabels } from "@/lib/equipment-units";
 import { LoadingSpinner } from "@/app/_components/LoadingSpinner";
+import { OperatorSearchPicker, type OperatorPickerOption } from "@/app/_components/OperatorSearchPicker";
 
 const SLOT_MINUTES = 10;
 const timeOptions: string[] = [];
@@ -30,8 +31,6 @@ function SubmitButton() {
   );
 }
 
-type OperatorOption = { id: string; username: string };
-
 export function ReservationForm({
   equipmentId,
   equipmentSlug,
@@ -40,6 +39,8 @@ export function ReservationForm({
   defaultStudentNumber,
   defaultDate,
   operators = [],
+  operatorHint,
+  operatorUnavailable = false,
 }: {
   equipmentId: string;
   equipmentSlug: string;
@@ -47,7 +48,10 @@ export function ReservationForm({
   defaultStudentName: string;
   defaultStudentNumber: string;
   defaultDate: string;
-  operators?: OperatorOption[];
+  operators?: OperatorPickerOption[];
+  operatorHint?: string;
+  /** 기자재별 담당이 켜져 있는데 등록된 오퍼가 없을 때 */
+  operatorUnavailable?: boolean;
 }) {
   const { minDate, maxDate } = useMemo(() => {
     const d = new Date();
@@ -212,23 +216,27 @@ export function ReservationForm({
           </label>
         </div>
 
-        {operators.length > 0 && (
+        {(operators.length > 0 || operatorUnavailable) && (
           <div className="mt-4 rounded-lg border border-primary/10 bg-primary/5 p-4 dark:border-primary/20 dark:bg-primary/10">
             <span className="text-sm font-bold text-primary/80">오퍼레이터 지정 (선택)</span>
             <p className="mt-1 text-xs text-primary/60">
-              오퍼레이터를 지정하면 해당 오퍼레이터가 승인한 후 예약이 확정됩니다.
+              오퍼레이터를 지정하면 해당 오퍼레이터가 승인한 후 예약이 확정됩니다. 비워 두면 오퍼레이터 없이 신청됩니다.
             </p>
-            <select
-              name="operatorId"
-              className="mt-2 w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-primary focus:ring-1 focus:ring-primary/20 dark:border-primary/20 dark:bg-primary/5"
-            >
-              <option value="">오퍼레이터 없이 예약</option>
-              {operators.map((op) => (
-                <option key={op.id} value={op.id}>
-                  @{op.username}
-                </option>
-              ))}
-            </select>
+            {operatorHint ? <p className="mt-1 text-xs text-primary/55">{operatorHint}</p> : null}
+            {operatorUnavailable ? (
+              <p className="mt-2 text-sm text-amber-800 dark:text-amber-200">
+                이 기자재에 담당으로 등록된 오퍼레이터가 없어 지정할 수 없습니다. 관리자에게 기자재–오퍼 담당을 등록해 달라고 요청해 주세요.
+              </p>
+            ) : (
+              <div className="mt-2">
+                <OperatorSearchPicker
+                  operators={operators}
+                  name="operatorId"
+                  label="오퍼레이터 검색"
+                  searchPlaceholder="username 또는 이름으로 검색…"
+                />
+              </div>
+            )}
           </div>
         )}
 

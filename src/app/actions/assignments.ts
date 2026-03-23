@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { sendPushToUser } from "@/lib/push";
+import { isOperatorAllowedForPostEquipment } from "@/lib/operator-equipment";
 
 const AssignSchema = z.object({
   postId: z.string().uuid(),
@@ -23,7 +24,7 @@ export async function addAssignmentAction(_: unknown, formData: FormData) {
 
   const post = await prisma.post.findUnique({
     where: { id: parsed.data.postId, deletedAt: null },
-    select: { id: true, authorId: true },
+    select: { id: true, authorId: true, equipmentId: true },
   });
   if (!post) return { ok: false as const, error: "NOT_FOUND" as const };
 
@@ -39,6 +40,9 @@ export async function addAssignmentAction(_: unknown, formData: FormData) {
   if (!operator || operator.status !== "ACTIVE" || operator.role !== "OPERATOR") {
     return { ok: false as const, error: "INVALID_OPERATOR" as const };
   }
+
+  const allowed = await isOperatorAllowedForPostEquipment(operator.id, post.equipmentId);
+  if (!allowed) return { ok: false as const, error: "INVALID_OPERATOR" as const };
 
   const currentCount = await prisma.postAssignment.count({
     where: { postId: post.id },

@@ -56,6 +56,9 @@ export function HeaderNavLinks({ user }: { user: NavUser }) {
               <Link className={linkClass} href="/admin/posts">
                 게시글 관리
               </Link>
+              <Link className={linkClass} href="/admin/operator-equipment">
+                기자재–오퍼
+              </Link>
             </>
           )}
           <Link className={linkClass} href="/posts/new">

@@ -1,12 +1,9 @@
 "use client";
 
 import { addAssignmentFormAction, removeAssignmentFormAction } from "@/app/actions/assignments";
+import { OperatorSearchPicker, type OperatorPickerOption } from "@/app/_components/OperatorSearchPicker";
 
 type UserRole = "USER" | "OPERATOR" | "ADMIN";
-type Operator = {
-  id: string;
-  username: string;
-};
 
 type Assignment = {
   operatorId: string;
@@ -19,7 +16,8 @@ export function PostAssignmentsManager(props: {
   currentUserRole: UserRole;
   postAuthorId: string;
   assignments: Assignment[];
-  operators: Operator[];
+  operators: OperatorPickerOption[];
+  operatorHint?: string;
 }) {
   const canEdit =
     props.currentUserRole === "ADMIN" || props.currentUserId === props.postAuthorId;
@@ -34,6 +32,11 @@ export function PostAssignmentsManager(props: {
           <div className="text-xs text-zinc-500 dark:text-zinc-400">
             최대 3명까지 지정할 수 있습니다.
           </div>
+          {props.operatorHint ? (
+            <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+              {props.operatorHint}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -63,33 +66,39 @@ export function PostAssignmentsManager(props: {
         )}
       </div>
 
-      {canEdit && props.assignments.length < 3 && (
-        <form action={addAssignmentFormAction} className="flex flex-wrap items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-700">
+      {canEdit && props.assignments.length < 3 && props.operators.length > 0 && (
+        <form
+          action={addAssignmentFormAction}
+          onSubmit={(e) => {
+            const fd = new FormData(e.currentTarget);
+            const oid = fd.get("operatorId");
+            if (!oid || typeof oid !== "string" || oid.trim() === "") {
+              e.preventDefault();
+            }
+          }}
+          className="flex flex-col gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-700"
+        >
           <input type="hidden" name="postId" value={props.postId} />
-          <select
+          <OperatorSearchPicker
+            operators={props.operators}
             name="operatorId"
-            className="h-8 rounded-xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-800 dark:text-zinc-100 px-2 text-xs outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
-            defaultValue=""
-            required
-          >
-            <option value="" disabled>
-              오퍼레이터 선택
-            </option>
-            {props.operators.map((op) => (
-              <option key={op.id} value={op.id}>
-                @{op.username}
-              </option>
-            ))}
-          </select>
+            label="오퍼레이터 검색"
+            searchPlaceholder="username 또는 이름으로 검색…"
+          />
           <button
             type="submit"
-            className="rounded-xl bg-zinc-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-60"
+            className="self-start rounded-xl bg-zinc-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
           >
             담당 지정
           </button>
         </form>
       )}
+
+      {canEdit && props.assignments.length < 3 && props.operators.length === 0 && (
+        <p className="pt-2 text-xs text-zinc-500 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-700">
+          이 기자재에 지정할 수 있는 오퍼레이터가 없습니다. 관리자에게 기자재–오퍼레이터 담당을 등록해 달라고 요청해 주세요.
+        </p>
+      )}
     </section>
   );
 }
-

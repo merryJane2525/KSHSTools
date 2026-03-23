@@ -7,6 +7,7 @@ import type { Prisma, UserRole, OperatorStatus, ReservationStatus, OperatorWorkL
 import { prisma } from "@/lib/db";
 import { getEquipmentUnitLabels } from "@/lib/equipment-units";
 import { requireUser } from "@/lib/auth";
+import { isOperatorAllowedForReservationEquipment } from "@/lib/operator-equipment";
 
 /** Prisma enum 필터용 mutable 배열 (readonly 할당 오류 방지) */
 const ROLES_OPERATOR_OR_ADMIN: UserRole[] = ["OPERATOR", "ADMIN"];
@@ -96,6 +97,8 @@ export async function createReservationAction(_: unknown, formData: FormData) {
       select: { id: true },
     });
     if (!operator) return { ok: false as const, error: "INVALID_OPERATOR" as const };
+    const allowed = await isOperatorAllowedForReservationEquipment(operator.id, equipment.id);
+    if (!allowed) return { ok: false as const, error: "INVALID_OPERATOR" as const };
     operatorId = operator.id;
   }
 

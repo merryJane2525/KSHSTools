@@ -116,6 +116,9 @@ model User {
   operatorWorkLogs  OperatorWorkLog[] @relation("WorkLogOperator")
   requesterWorkLogs OperatorWorkLog[]  @relation("WorkLogRequester")
 
+  /** 기자재별 담당 오퍼로 지정 가능한 링크 (비어 있으면 해당 기자재는 전체 오퍼 허용) */
+  operatorEquipments OperatorEquipment[]
+
   reportsFiled    Report[] @relation("ReportsFiled")
   auditLogs       AuditLog[] @relation("AuditActor")
 
@@ -149,8 +152,23 @@ model Equipment {
   reservations Reservation[]
   workLogs  OperatorWorkLog[]
 
+  operatorEquipments OperatorEquipment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/** 어떤 오퍼레이터가 어떤 기자재를 담당하는지. 특정 equipment에 행이 하나도 없으면 → 그 장비는 전체 오퍼(및 예약 시 ADMIN) 허용 */
+model OperatorEquipment {
+  operatorId  String
+  equipmentId String
+  operator    User      @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([operatorId, equipmentId])
+  @@index([equipmentId])
 }
 
 model Reservation {

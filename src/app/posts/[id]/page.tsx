@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { equipmentHasOperatorScope, getOperatorsForPostEquipment } from "@/lib/operator-equipment";
 import { formatDateTime } from "@/lib/date";
 import { CommentForm } from "./ui";
 import { PostAssignmentsManager } from "./assignments-ui";
@@ -16,7 +17,7 @@ type PostDetail = {
   imageUrls: string[] | null;
   status: string;
   createdAt: Date;
-  equipment: { name: string; slug: string };
+  equipment: { id: string; name: string; slug: string };
   author: { id: string; username: string };
   assignments: {
     operatorId: string;
@@ -55,7 +56,7 @@ export default async function PostDetailPage({
       imageUrls: true,
       status: true,
       createdAt: true,
-      equipment: { select: { name: true, slug: true } },
+      equipment: { select: { id: true, name: true, slug: true } },
       author: { select: { id: true, username: true } },
       assignments: {
         select: {
@@ -109,13 +110,12 @@ export default async function PostDetailPage({
     imageUrls: imageUrlsArray,
   };
 
-  const operators = me
-    ? await prisma.user.findMany({
-        where: { role: "OPERATOR", status: "ACTIVE" },
-        orderBy: { username: "asc" },
-        select: { id: true, username: true },
-      })
-    : [];
+  const operators = me ? await getOperatorsForPostEquipment(post.equipment.id) : [];
+  const assignmentOperatorHint = me
+    ? (await equipmentHasOperatorScope(post.equipment.id))
+      ? "이 기자재에 담당으로 등록된 오퍼레이터만 선택할 수 있습니다."
+      : "등록된 담당 구분이 없으면 모든 오퍼레이터를 지정할 수 있습니다."
+    : undefined;
 
   return (
     <div className="space-y-6">
@@ -178,6 +178,7 @@ export default async function PostDetailPage({
               postAuthorId={post.author.id}
               assignments={post.assignments}
               operators={operators}
+              operatorHint={assignmentOperatorHint}
             />
 
             {me.role === "ADMIN" && (

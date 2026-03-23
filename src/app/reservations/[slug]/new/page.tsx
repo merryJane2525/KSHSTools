@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { equipmentHasOperatorScope, getOperatorsForReservationEquipment } from "@/lib/operator-equipment";
 import { AnimateOnScroll } from "@/app/_components/AnimateOnScroll";
 import { ReservationForm } from "./ReservationForm";
 
@@ -48,11 +49,12 @@ export default async function NewReservationPage({ params, searchParams }: PageP
   });
   if (!equipment) notFound();
 
-  const operators = await prisma.user.findMany({
-    where: { status: "ACTIVE", role: { in: ["OPERATOR", "ADMIN"] } },
-    select: { id: true, username: true },
-    orderBy: { username: "asc" },
-  });
+  const equipmentScoped = await equipmentHasOperatorScope(equipment.id);
+  const operators = await getOperatorsForReservationEquipment(equipment.id);
+  const reservationOperatorHint = equipmentScoped
+    ? "이 기자재에 담당으로 등록된 오퍼레이터·관리자만 선택할 수 있습니다."
+    : "등록된 담당 구분이 없으면 모든 오퍼레이터·관리자를 지정할 수 있습니다.";
+  const reservationOperatorUnavailable = equipmentScoped && operators.length === 0;
 
   const user = await prisma.user.findUnique({
     where: { id: me.id },
@@ -81,6 +83,8 @@ export default async function NewReservationPage({ params, searchParams }: PageP
           defaultStudentNumber={defaultStudentNumber}
           defaultDate={defaultDate}
           operators={operators}
+          operatorHint={reservationOperatorHint}
+          operatorUnavailable={reservationOperatorUnavailable}
         />
       </AnimateOnScroll>
     </div>
