@@ -37,9 +37,25 @@ export const EQUIPMENT_UNITS: Record<string, EquipmentUnitConfig> = {
   "서버컴퓨터": { count: 2, labels: ["A", "B"] },
 };
 
+/** DB·표시명이 다를 때 EQUIPMENT_UNITS 키로 연결 */
+const EQUIPMENT_UNIT_ALIASES: Record<string, keyof typeof EQUIPMENT_UNITS> = {
+  "뇌파 측정기": "뇌파측정기",
+  "UV-vis 분광광도계": "UV-vis",
+};
+
+function normalizeUnitLookupName(name: string): string {
+  return name.replace(/[‐‑‒–—−﹣－]/g, "-").trim();
+}
+
 /** 기자재 이름으로 장비 단위 설정을 조회 */
 export function getEquipmentUnitConfig(name: string): EquipmentUnitConfig | null {
-  return EQUIPMENT_UNITS[name] ?? null;
+  const t = normalizeUnitLookupName(name);
+  const table = EQUIPMENT_UNITS as Record<string, EquipmentUnitConfig>;
+  const direct = table[t];
+  if (direct) return direct;
+  const alias = EQUIPMENT_UNIT_ALIASES[t];
+  if (alias) return EQUIPMENT_UNITS[alias] ?? null;
+  return null;
 }
 
 /** 장비 이름으로 라벨 목록만 편하게 조회 */

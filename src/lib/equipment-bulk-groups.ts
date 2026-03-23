@@ -4,6 +4,51 @@
  */
 
 import { getEquipmentUnitLabels } from "@/lib/equipment-units";
+import { compactEquipmentLabel, normalizeEquipmentLabel } from "@/lib/home-equipment-resolve";
+
+/**
+ * 이름 표기가 달라도 같은 기종으로 묶어 일괄 오퍼 지정 (관리자 화면).
+ * 뇌파측정기 / 뇌파 측정기, UV-vis / UV-vis 분광광도계, PCR 등
+ */
+const SHARED_BULK_FAMILIES: ReadonlyArray<{
+  key: string;
+  displayLabel: string;
+  matchNames: readonly string[];
+}> = [
+  { key: "eeg", displayLabel: "뇌파측정기", matchNames: ["뇌파측정기", "뇌파 측정기"] },
+  { key: "uvvis", displayLabel: "UV-vis 분광광도계", matchNames: ["UV-vis", "UV-vis 분광광도계"] },
+  { key: "pcr", displayLabel: "PCR", matchNames: ["PCR"] },
+];
+
+function resolveBulkFamilyGroupKey(strippedOrFullName: string): string | null {
+  const n = normalizeEquipmentLabel(strippedOrFullName);
+  const c = compactEquipmentLabel(strippedOrFullName);
+  for (const fam of SHARED_BULK_FAMILIES) {
+    for (const m of fam.matchNames) {
+      if (normalizeEquipmentLabel(m) === n || compactEquipmentLabel(m) === c) {
+        return `fam:${fam.key}`;
+      }
+    }
+  }
+  return null;
+}
+
+function bulkFamilyDisplayLabel(groupKey: string): string | null {
+  if (!groupKey.startsWith("fam:")) return null;
+  const short = groupKey.slice(4);
+  const fam = SHARED_BULK_FAMILIES.find((f) => f.key === short);
+  return fam?.displayLabel ?? null;
+}
+
+/** 접미 ` A` 제거 후, 알려진 기종 패밀리면 동일 키로 묶음 */
+function groupingKeyForEquipment(eqName: string): string {
+  const stripped = stripTrailingUnitSuffix(eqName);
+  const fromStripped = resolveBulkFamilyGroupKey(stripped);
+  if (fromStripped) return fromStripped;
+  const fromFull = resolveBulkFamilyGroupKey(eqName);
+  if (fromFull) return fromFull;
+  return stripped.toLowerCase();
+}
 
 export type EquipmentBulkGroup = {
   /** 그룹 식별용 (정렬·키) */
@@ -41,8 +86,7 @@ export function buildEquipmentBulkGroups(equipments: { id: string; name: string 
   const byBase = new Map<string, { id: string; name: string }[]>();
 
   for (const eq of equipments) {
-    const base = stripTrailingUnitSuffix(eq.name);
-    const key = base.toLowerCase();
+    const key = groupingKeyForEquipment(eq.name);
     const list = byBase.get(key);
     if (list) list.push(eq);
     else byBase.set(key, [eq]);
@@ -51,7 +95,8 @@ export function buildEquipmentBulkGroups(equipments: { id: string; name: string 
   const out: EquipmentBulkGroup[] = [];
   for (const [groupKey, members] of byBase) {
     if (members.length < 2) continue;
-    const displayLabel = stripTrailingUnitSuffix(members[0].name);
+    const displayLabel =
+      bulkFamilyDisplayLabel(groupKey) ?? stripTrailingUnitSuffix(members[0].name);
     const unitTags = members.map((m) => extractUnitTag(m.name));
     out.push({
       groupKey,
