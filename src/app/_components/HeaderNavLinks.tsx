@@ -40,7 +40,7 @@ export function HeaderNavLinks({ user }: { user: NavUser }) {
           )}
           {user.email && (
             <Link className={linkClass} href="/account">
-              계정
+              마이페이지
             </Link>
           )}
           {(user.role === "OPERATOR" || user.role === "ADMIN") && (

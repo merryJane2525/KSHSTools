@@ -4,7 +4,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { verifyPassword } from "@/lib/password";
+import { hashPassword, verifyPassword } from "@/lib/password";
 import { clearSessionCookie, setSessionCookie, requireUser } from "@/lib/auth";
 
 const LoginSchema = z.object({
@@ -101,5 +101,54 @@ export async function setAccountEmailFormAction(formData: FormData) {
     redirect(`/account?error=${encodeURIComponent(result.error)}`);
   }
   redirect("/account?ok=1");
+}
+
+const ChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(72),
+  newPassword: z.string().min(8).max(72),
+});
+
+/** 로그인한 사용자 본인 비밀번호 변경 */
+export async function changePasswordAction(_: unknown, formData: FormData) {
+  const me = await requireUser();
+
+  const newPasswordConfirm = formData.get("newPasswordConfirm");
+  const parsed = ChangePasswordSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    newPassword: formData.get("newPassword"),
+  });
+  if (!parsed.success) {
+    return { ok: false as const, error: "VALIDATION_ERROR" as const };
+  }
+  if (typeof newPasswordConfirm !== "string" || newPasswordConfirm !== parsed.data.newPassword) {
+    return { ok: false as const, error: "MISMATCH" as const };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: me.id },
+    select: { passwordHash: true },
+  });
+  if (!user) return { ok: false as const, error: "NOT_FOUND" as const };
+
+  const currentOk = await verifyPassword(parsed.data.currentPassword, user.passwordHash);
+  if (!currentOk) return { ok: false as const, error: "WRONG_PASSWORD" as const };
+
+  const nextHash = await hashPassword(parsed.data.newPassword);
+  await prisma.user.update({
+    where: { id: me.id },
+    data: { passwordHash: nextHash },
+  });
+
+  revalidatePath("/account");
+  revalidatePath("/", "layout");
+  return { ok: true as const };
+}
+
+export async function changePasswordFormAction(formData: FormData) {
+  const result = await changePasswordAction(null, formData);
+  if (!result.ok) {
+    redirect(`/account?pwd_error=${encodeURIComponent(result.error)}`);
+  }
+  redirect("/account?pwd_ok=1");
 }
 
